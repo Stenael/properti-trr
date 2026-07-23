@@ -16,14 +16,8 @@ function Footer() {
 
           <div>
             <div className="flex items-center gap-3 mb-5">
-              <img
-                src="/logo.png"
-                alt="logo"
-                className="w-12 h-12 bg-white rounded-xl p-1"
-              />
-
-              <h1 className="text-2xl font-bold">
-                Ini Nama
+              <h1 className="text-2xl font-bold text-white">
+                TRUST234
               </h1>
             </div>
 
@@ -42,28 +36,28 @@ function Footer() {
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => navigate("/")}
-                className="text-left hover:text-blue-300 transition"
+                className="text-left hover:text-blue-300 transition cursor-pointer"
               >
                 Beranda
               </button>
 
               <button
                 onClick={() => navigate("/sale")}
-                className="text-left hover:text-blue-300 transition"
+                className="text-left hover:text-blue-300 transition cursor-pointer"
               >
                 Properti Dijual
               </button>
 
               <button
                 onClick={() => navigate("/rent")}
-                className="text-left hover:text-blue-300 transition"
+                className="text-left hover:text-blue-300 transition cursor-pointer"
               >
                 Properti Disewa
               </button>
 
               <button
                 onClick={() => navigate("/question")}
-                className="text-left hover:text-blue-300 transition"
+                className="text-left hover:text-blue-300 transition cursor-pointer"
               >
                 FAQ
               </button>

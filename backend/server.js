@@ -21,7 +21,7 @@ app.get("/", (req, res) => {
 });
 
 app.post('/register', (req, res) => {
-  const { username, password, name, address, phone_number, email } = req.body;
+  const { username, password, name, city, phone_number, email } = req.body;
   db.query('SELECT * FROM akuns WHERE username=?', [username], async (err, result) => {
     if (err) return res.status(500).json({ message: 'Server error' });
 
@@ -31,8 +31,8 @@ app.post('/register', (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     db.query(
-      'INSERT INTO akuns (username, password, name, address, phone_number, email) VALUES (?, ?, ?, ?, ?, ?)',
-      [username, hashedPassword, name, address, phone_number, email],
+      'INSERT INTO akuns (username, password, name, city, phone_number, email) VALUES (?, ?, ?, ?, ?, ?)',
+      [username, hashedPassword, name, city, phone_number, email],
       (err) => {
         if (err) return res.status(500).json({ message: 'Error registering user' });
         res.status(201).json({ message: 'User registered successfully' });

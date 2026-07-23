@@ -5,7 +5,7 @@ function Register() {
   const [username, setUsername] = useState("");
   const [name, setShopName] = useState("");
   const [password, setPassword] = useState("");
-  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
   const [phone_number, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
@@ -24,7 +24,7 @@ function Register() {
           username,
           password,
           name,
-          address,
+          city,
           phone_number,
           email,
         }),
@@ -120,13 +120,13 @@ function Register() {
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Alamat
+                    Kota
                     </label>
                     <input
                     type="text"
-                    placeholder="Masukkan alamat"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Masukkan kota"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
                     required
                     className="w-full h-12 rounded-xl border border-gray-300 px-4 focus:outline-none focus:ring-2 focus:ring-blue-800"
                     />

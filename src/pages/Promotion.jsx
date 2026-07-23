@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import {ImagePlus, Plus, Trash2, Save, Home, MapPin, Zap, Ruler, FileText, Bed, Bath} from "lucide-react";
 import NavbarIntern from "./NavbarIntern";
+import { useNavigate } from "react-router-dom";
 
 function Promotion() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -52,33 +54,44 @@ function Promotion() {
     setDeskripsi(temp);
   };
 
-  const handleSubmit = async(e)=>{
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     const token = localStorage.getItem("token");
     const form = new FormData();
-    Object.keys(formData).forEach(key=>{
-        form.append(key,formData[key]);
+
+    Object.keys(formData).forEach((key) => {
+      form.append(key, formData[key]);
     });
-    images.forEach(img=>{
-        form.append("images",img);
+
+    images.forEach((img) => {
+      form.append("images", img);
     });
-    form.append(
-        "deskripsi",
-        JSON.stringify(deskripsi)
-    );
-    const response = await fetch(
-        "http://localhost:5000/property",
-        {
-            method:"POST",
-            headers:{
-                Authorization:`Bearer ${token}`
-            },
-            body:form
-        }
-    );
-    const data = await response.json();
-    alert(data.message);
-  }
+
+    form.append("deskripsi", JSON.stringify(deskripsi));
+
+    try {
+      const response = await fetch("http://localhost:5000/property", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: form,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message);
+        navigate("/dashboardIntern");
+      } else {
+        alert(data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan pada server");
+    }
+  };
 
   useEffect(() => {
     fetch("https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json")
@@ -219,6 +232,7 @@ function Promotion() {
                       placeholder="Rp 0"
                       name="price"
                       onChange={handleChange}
+                      onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
                     />
                   </div>
@@ -267,6 +281,7 @@ function Promotion() {
                       type="number"
                       name="luasTanah"
                       onChange={handleChange}
+                      onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
                     />
                   </div>
@@ -284,6 +299,7 @@ function Promotion() {
                       type="number"
                       name="luasBangunan"
                       onChange={handleChange}
+                      onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
                     />
                   </div>
@@ -301,6 +317,7 @@ function Promotion() {
                       type="number"
                       name="listrik"
                       onChange={handleChange}
+                      onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
                     />
                   </div>
@@ -321,6 +338,7 @@ function Promotion() {
                       type="number"
                       name="kt"
                       onChange={handleChange}
+                      onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
                     />
                   </div>
@@ -338,6 +356,7 @@ function Promotion() {
                       type="number"
                       name="km"
                       onChange={handleChange}
+                      onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
                     />
                   </div>
