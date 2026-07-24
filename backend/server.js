@@ -167,32 +167,18 @@ app.post(
   }
 );
 
-app.get("/property", authenticateToken, (req, res) => {
-  console.log("User ID:", req.userId);
-  db.query(
-    "SELECT * FROM properties WHERE userId = ? ORDER BY id DESC",
-    [req.userId],
-    (err, result) => {
-      if (err) {
-        return res.status(500).json({
-          message: "Gagal mengambil data",
-        });
-      }
-
-      const data = result.map((item) => ({
-        ...item,
-        images: JSON.parse(item.images || "[]"),
-        deskripsi: JSON.parse(item.deskripsi || "[]"),
-      }));
-
-      res.json(data);
-    }
-  );
-});
-
 app.get("/properties", (req, res) => {
   db.query(
-    "SELECT * FROM properties ORDER BY id DESC",
+    `SELECT
+      properties.*,
+      akuns.name AS ownerName,
+      akuns.city AS ownerCity,
+      akuns.phone_number
+    FROM properties
+    JOIN akuns
+      ON properties.userId = akuns.id
+    ORDER BY properties.id DESC
+    LIMIT 3`,
     (err, result) => {
       if (err) {
         return res.status(500).json({
@@ -213,7 +199,16 @@ app.get("/properties", (req, res) => {
 
 app.get("/properties/sale", (req, res) => {
   db.query(
-    "SELECT * FROM properties WHERE type = 'Dijual' ORDER BY id DESC",
+    `SELECT
+      properties.*,
+      akuns.name AS ownerName,
+      akuns.city AS ownerCity,
+      akuns.phone_number
+    FROM properties
+    JOIN akuns
+      ON properties.userId = akuns.id
+    WHERE properties.type = 'Dijual'
+    ORDER BY properties.id DESC`,
     (err, result) => {
       if (err) {
         return res.status(500).json({
@@ -234,7 +229,16 @@ app.get("/properties/sale", (req, res) => {
 
 app.get("/properties/rent", (req, res) => {
   db.query(
-    "SELECT * FROM properties WHERE type = 'Disewa' ORDER BY id DESC",
+    `SELECT
+      properties.*,
+      akuns.name AS ownerName,
+      akuns.city AS ownerCity,
+      akuns.phone_number
+    FROM properties
+    JOIN akuns
+      ON properties.userId = akuns.id
+    WHERE properties.type = 'Disewa'
+    ORDER BY properties.id DESC`,
     (err, result) => {
       if (err) {
         return res.status(500).json({

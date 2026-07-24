@@ -24,7 +24,7 @@ function Footer() {
             <p className="text-blue-100 leading-7">
               Platform pencarian rumah, apartemen,
               ruko, dan properti terpercaya untuk
-              jual maupun sewa di seluruh Indonesia.
+              jual maupun sewa di Surabaya.
             </p>
           </div>
 

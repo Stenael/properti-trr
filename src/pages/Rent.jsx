@@ -2,19 +2,48 @@ import React, { useEffect, useState } from "react";
 import Navbar from './Navbar'
 import SearchNav from './SearchNav'
 import Footer from './Footer'
-import { MapPin, BedDouble, Bath, Ruler } from "lucide-react";
+import { MapPin, BedDouble, Bath, LandPlot, House, MessageCircle, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 function Rent() {
+  const [currentImage, setCurrentImage] = useState({});
   const [properties, setProperties] = useState([]);
   const navigate = useNavigate();
 
-    useEffect(() => {
-      fetch("http://localhost:5000/properties/rent")
-        .then((res) => res.json())
-        .then((data) => setProperties(data))
-        .catch(console.error);
-    }, []);
+  useEffect(() => {
+    fetch("http://localhost:5000/properties/rent")
+      .then((res) => res.json())
+      .then((data) => setProperties(data))
+      .catch(console.error);
+  }, []);
+
+  const nextImage = (property) => {
+    setCurrentImage((prev) => {
+      const index = prev[property.id] || 0;
+
+      return {
+        ...prev,
+        [property.id]:
+          index === property.images.length - 1
+            ? 0
+            : index + 1,
+      };
+    });
+  };
+
+  const prevImage = (property) => {
+    setCurrentImage((prev) => {
+      const index = prev[property.id] || 0;
+
+      return {
+        ...prev,
+        [property.id]:
+          index === 0
+            ? property.images.length - 1
+            : index - 1,
+      };
+    });
+  };
 
   return (
     <>
@@ -36,11 +65,49 @@ function Rent() {
             onClick={() => navigate(`/property/${property.id}`)}
           >
             <div className="relative">
-              <img
-                src={`http://localhost:5000/uploads/${property.images[0]}`}
-                alt=""
-                className="h-60 w-full object-cover"
+              <img src={`http://localhost:5000/uploads/${
+                  property.images[currentImage[property.id] || 0]
+                }`}
+                alt={property.name}
+                className="h-56 w-full object-cover transition"
               />
+              {property.images.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      prevImage(property);
+                    }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow cursor-pointer"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      nextImage(property);
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow cursor-pointer"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </>
+              )}
+              {property.images.length > 1 && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                  {property.images.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`w-2 h-2 rounded-full ${
+                        (currentImage[property  .id] || 0) === i
+                          ? "bg-white"
+                          : "bg-white/50"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
               <span className="absolute top-4 left-4 bg-blue-800 text-white px-4 py-2 rounded-full text-sm font-semibold">
                 Disewa
               </span>
@@ -56,7 +123,7 @@ function Rent() {
               <h3 className="text-2xl text-blue-800 font-bold mt-5">
                 Rp {Number(property.price).toLocaleString("id-ID")}
               </h3>
-              <div className="grid grid-cols-3 mt-6 border-t pt-5">
+              <div className="grid grid-cols-4 mt-6 border-t pt-5">
                 <div className="flex flex-col items-center">
                   <BedDouble className="text-blue-700" />
                   <span>{property.kt} KT</span>
@@ -66,9 +133,43 @@ function Rent() {
                   <span>{property.km} KM</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <Ruler className="text-blue-700" />
-                  <span>{property.luasBangunan} m²</span>
+                  <LandPlot className="text-blue-700"/>
+                  <p>{property.luasTanah} m²</p>
                 </div>
+                <div className="flex flex-col items-center">
+                  <House className="text-blue-700"/>
+                  <p>{property.luasBangunan} m²</p>
+                </div>
+              </div>
+              <div className="mt-6 border-t pt-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center">
+                    <User className="text-blue-700" size={20}/>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800">
+                      {property.ownerName}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {property.ownerCity}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(
+                      `https://wa.me/${property.phone_number.replace(/^0/, "62")}`,
+                      "_blank"
+                    );
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-xl transition"
+                >
+                  <div className="flex items-center gap-2">
+                    <MessageCircle size={20} />
+                    <div>Whatsapp</div>  
+                  </div>
+                </button>
               </div>
             </div>
           </div>

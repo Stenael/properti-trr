@@ -15,26 +15,13 @@ function Headline() {
             Sesuai Kebutuhan Anda
           </h1>
           <p className="mt-6 text-lg text-gray-500 leading-8">
-            Cari properti dijual maupun disewakan dari berbagai kota
-            di Indonesia dengan mudah dan cepat.
+            Cari properti dijual maupun disewakan di kota
+            Surabaya dengan mudah dan cepat.
           </p>
         </div>
         
         <div className="mt-14 bg-white rounded-2xl shadow-xl p-6">
-          <div className="grid lg:grid-cols-5 gap-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Daerah
-              </label>
-              <select className="w-full h-12 border border-gray-300 rounded-lg px-4 focus:outline-none focus:ring-2 focus:ring-blue-800 cursor-pointer">
-                <option>Semua Daerah</option>
-                <option>Surabaya</option>
-                <option>Jakarta</option>
-                <option>Bandung</option>
-                <option>Yogyakarta</option>
-                <option>Malang</option>
-              </select>
-            </div>
+          <div className="grid lg:grid-cols-4 gap-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 ">
                 Status
