@@ -7,45 +7,53 @@ function SearchNav() {
 
     console.log({
       keyword,
-      province,
-      city,
-      price,
+      district,
+      village,
+      sortPrice,
     });
   };
 
   const [keyword, setKeyword] = useState("");
-  const [province, setProvince] = useState("");
-  const [city, setCity] = useState("");
-  const [price, setPrice] = useState("");
+  const [district, setDistrict] = useState("");
+  const [village, setVillage] = useState("");
 
-  const [provinces, setProvinces] = useState([]);
-  const [cities, setCities] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [villages, setVillages] = useState([]);
+  const [sortPrice, setSortPrice] = useState("");
 
   useEffect(() => {
-    fetch("https://ibnux.github.io/data-indonesia/provinsi.json")
+    fetch(
+      "https://www.emsifa.com/api-wilayah-indonesia/api/districts/3578.json"
+    )
       .then((res) => res.json())
-      .then((data) => setProvinces(data))
-      .catch((err) => console.log(err));
+      .then((data) => setDistricts(data))
+      .catch(console.error);
   }, []);
 
-  const handleProvinceChange = async (e) => {
-    const provinsiId = e.target.value;
-    setProvince(provinsiId);
-    setCity("");
-    if (!provinsiId) {
-      setCities([]);
+  const handleDistrictChange = async (e) => {
+    const districtId = e.target.value;
+
+    setDistrict(districtId);
+    setVillage("");
+
+    if (!districtId) {
+      setVillages([]);
       return;
     }
+
     try {
       const res = await fetch(
-        `https://ibnux.github.io/data-indonesia/kabupaten/${provinsiId}.json`
+        `https://www.emsifa.com/api-wilayah-indonesia/api/villages/${districtId}.json`
       );
+
       const data = await res.json();
-      setCities(data);
+
+      setVillages(data);
     } catch (err) {
       console.log(err);
     }
   };
+
   return (
     <div className="w-full bg-gradient-to-r from-blue-900 to-blue-700 py-8 shadow-lg">
       <div className="max-w-7xl mx-auto px-6 flex justify-center">
@@ -67,14 +75,15 @@ function SearchNav() {
           <div className="flex items-center px-5">
             <MapPin className="text-blue-800 mr-2" size={20} />
             <select
-              value={province}
-              onChange={handleProvinceChange}
+              value={district}
+              onChange={handleDistrictChange}
               className="h-16 outline-none cursor-pointer bg-transparent text-gray-700"
             >
-              <option value="">Semua Provinsi</option>
-              {provinces.map((item) => (
+              <option value="">Semua Kecamatan</option>
+
+              {districts.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.nama}
+                  {item.name}
                 </option>
               ))}
             </select>
@@ -83,16 +92,16 @@ function SearchNav() {
           <div className="flex items-center px-5">
             <MapPin className="text-blue-800 mr-2" size={20} />
             <select
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              disabled={!province}
+              value={village}
+              onChange={(e) => setVillage(e.target.value)}
+              disabled={!district}
               className="h-16 outline-none cursor-pointer bg-transparent text-gray-700"
             >
-              <option value="">Semua Kota</option>
+              <option value="">Semua Kelurahan</option>
 
-              {cities.map((item) => (
-                <option key={item.id} value={item.nama}>
-                  {item.nama}
+              {villages.map((item) => (
+                <option key={item.id} value={item.name}>
+                  {item.name}
                 </option>
               ))}
             </select>
@@ -101,15 +110,13 @@ function SearchNav() {
           <div className="flex items-center px-5">
             <Wallet className="text-blue-800 mr-2" size={20} />
             <select
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              value={sortPrice}
+              onChange={(e) => setSortPrice(e.target.value)}
               className="h-16 outline-none cursor-pointer bg-transparent text-gray-700"
             >
-              <option value="">Semua Harga</option>
-              <option value="500">≤ 500 Juta</option>
-              <option value="1000">≤ 1 Miliar</option>
-              <option value="2000">≤ 2 Miliar</option>
-              <option value="5000">≥ 5 Miliar</option>
+              <option value="">Urutkan Harga</option>
+              <option value="asc">Harga Terendah</option>
+              <option value="desc">Harga Tertinggi</option>
             </select>
           </div>
           <div className="p-2">

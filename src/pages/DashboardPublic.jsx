@@ -11,7 +11,7 @@ function DashboardPublic() {
   const [properties, setProperties] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/properties")
+    fetch("http://localhost:5000/propertiesAll")
       .then((res) => res.json())
       .then((data) => setProperties(data))
       .catch((err) => console.log(err));
@@ -112,18 +112,24 @@ function DashboardPublic() {
                     ))}
                   </div>
                 )}
-                <span className="absolute top-4 left-4 bg-blue-800 text-white text-sm px-4 py-1 rounded-full">
-                  {item.type}
-                </span>
+                <div className="absolute top-4 left-4 flex gap-2">
+                  <span className="bg-blue-700 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
+                    {item.type}
+                  </span>
+
+                  <span className="bg-white/90 text-slate-800 text-xs font-semibold px-3 py-1 rounded-full shadow backdrop-blur">
+                    {item.building}
+                  </span>
+                </div>
               </div>
               <div className="p-5">
                 <h3 className="font-bold text-xl line-clamp-1">
                   {item.name}
                 </h3>
-                <div className="flex items-center gap-2 mt-2 text-slate-500">
+                <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                   <MapPin size={16} />
                   <span className="line-clamp-1">
-                    {item.city}
+                    {item.district}, {item.village}
                   </span>
                 </div>
                 <p className="mt-5 text-2xl font-bold text-green-600">
@@ -132,27 +138,27 @@ function DashboardPublic() {
                 <div className="grid grid-cols-4 gap-4 mt-6 text-center">
                   <div>
                     <BedDouble
-                      size={18}
+                      size={20}
                       className="mx-auto mb-1 text-blue-700"
                     />
                     <p>{item.kt}</p>
                   </div>
                   <div>
                     <Bath
-                      size={18}
+                      size={20}
                       className="mx-auto mb-1 text-blue-700"
                     />
                     <p>{item.km}</p>
                   </div>
                   <div>
                     <LandPlot 
-                      size={18}
+                      size={20}
                       className="mx-auto mb-1 text-blue-700"/>
                     <p>{item.luasTanah} m²</p>
                   </div>
                   <div>
                     <House 
-                      size={18}
+                      size={20}
                       className="mx-auto mb-1 text-blue-700"/>
                     <p>{item.luasBangunan} m²</p>
                   </div>
@@ -192,8 +198,8 @@ function DashboardPublic() {
                     }}
                     className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-xl transition cursor-pointer"
                   >
-                    <div className="flex items-center gap-2">
-                      <MessageCircle size={20} />
+                    <div className="flex items-center gap-1">
+                      <MessageCircle size={18} />
                       <div>WhatsApp</div>
                     </div>
                   </button>

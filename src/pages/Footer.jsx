@@ -90,7 +90,7 @@ function Footer() {
           </div>
         </div>
         <div className="border-t border-blue-700 mt-12 pt-6 text-center text-blue-200 text-sm">
-          © {new Date().getFullYear()} Ini Nama. All Rights Reserved.
+          © {new Date().getFullYear()} TRUST234. All Rights Reserved.
         </div>
       </div>
     </footer>

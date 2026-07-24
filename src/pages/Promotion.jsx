@@ -8,8 +8,9 @@ function Promotion() {
   const [formData, setFormData] = useState({
     name: "",
     address: "",
-    provinsi: "",
-    city: "",
+    village: "",
+    district: "",
+    building: "",
     price: "",
     luasTanah: "",
     luasBangunan: "",
@@ -23,8 +24,9 @@ function Promotion() {
 
   const [images, setImages] = useState([]);
   const [deskripsi, setDeskripsi] = useState([""]);
-  const [provinces, setProvinces] = useState([]);
-  const [cities, setCities] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [villages, setVillages] = useState([]);
+  const [districtId, setDistrictId] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -71,7 +73,7 @@ function Promotion() {
     form.append("deskripsi", JSON.stringify(deskripsi));
 
     try {
-      const response = await fetch("http://localhost:5000/property", {
+      const response = await fetch("http://localhost:5000/promotion", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -94,43 +96,39 @@ function Promotion() {
   };
 
   useEffect(() => {
-    fetch("https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json")
+    fetch(
+      "https://www.emsifa.com/api-wilayah-indonesia/api/districts/3578.json"
+    )
       .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        setProvinces(data);
-      })
+      .then((data) => setDistricts(data))
       .catch(console.error);
   }, []);
 
-  const handleProvinceChange = async (e) => {
-    const provinceId = e.target.value;
+  const handleDistrictChange = async (e) => {
+    const id = e.target.value;
 
-    const selectedProvince = provinces.find(
-      (item) => item.id === provinceId
-    );
+    setDistrictId(id);
+
+    const selectedDistrict = districts.find((d) => d.id === id);
 
     setFormData((prev) => ({
       ...prev,
-      provinsi: selectedProvince?.name || "",
-      city: "",
+      district: selectedDistrict?.name || "",
+      village: "",
     }));
 
-    if (!provinceId) {
-      setCities([]);
+    if (!id) {
+      setVillages([]);
       return;
     }
 
     try {
       const res = await fetch(
-        `https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provinceId}.json`
+        `https://www.emsifa.com/api-wilayah-indonesia/api/villages/${id}.json`
       );
 
       const data = await res.json();
-
-      console.log(data);
-
-      setCities(data);
+      setVillages(data);
     } catch (err) {
       console.log(err);
     }
@@ -171,16 +169,17 @@ function Promotion() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="font-medium block mb-2">
-                      Provinsi
+                      Kecamatan
                     </label>
 
                     <select
-                      onChange={handleProvinceChange}
+                      value={districtId}
+                      onChange={handleDistrictChange}
                       className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none cursor-pointer"
                     >
-                      <option value="">Pilih Provinsi</option>
+                      <option value="">Pilih Kecamatan</option>
 
-                      {provinces.map((item) => (
+                      {districts.map((item) => (
                         <option key={item.id} value={item.id}>
                           {item.name}
                         </option>
@@ -190,19 +189,19 @@ function Promotion() {
 
                   <div>
                     <label className="font-medium block mb-2">
-                      Kota / Kabupaten
+                        Keluarahan
                     </label>
 
                     <select
-                      name="city"
-                      value={formData.cities}
+                      name="village"
+                      value={formData.village}
                       onChange={handleChange}
-                      disabled={!formData.provinsi}
+                      disabled={!formData.district}
                       className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none cursor-pointer disabled:bg-gray-100"
                     >
-                      <option value="">Pilih Kota</option>
+                      <option value="">Pilih Kelurahan</option>
 
-                      {cities.map((item) => (
+                      {villages.map((item) => (
                         <option key={item.id} value={item.name}>
                           {item.name}
                         </option>
@@ -278,7 +277,7 @@ function Promotion() {
                       className="absolute left-4 top-4 text-gray-400"
                     />
                     <input
-                      type="number"
+                      type="double"
                       name="luasTanah"
                       onChange={handleChange}
                       onWheel={(e) => e.target.blur()}

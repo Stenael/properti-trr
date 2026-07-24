@@ -57,7 +57,7 @@ app.post('/login', (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-    expiresIn: '1h',
+    expiresIn: '4h',
     });
     res.json({ message: 'Login successful', token});
   });
@@ -95,15 +95,16 @@ const upload = multer({
 });
 
 app.post(
-  "/property",
+  "/promotion",
   authenticateToken,
   upload.array("images", 20),
   (req, res) => {
     const {
       name,
       address,
-      provinsi,
-      city,
+      village,
+      district,
+      building,
       price,
       luasTanah,
       luasBangunan,
@@ -121,8 +122,9 @@ app.post(
         userId,
         name,
         address,
-        provinsi,
-        city,
+        village,
+        district,
+        building,
         price,
         luasTanah,
         luasBangunan,
@@ -134,13 +136,14 @@ app.post(
         images,
         deskripsi
       )
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         req.userId,
         name,
         address,
-        provinsi,
-        city,
+        village,
+        district,
+        building,
         price,
         luasTanah,
         luasBangunan,
@@ -167,7 +170,40 @@ app.post(
   }
 );
 
-app.get("/properties", (req, res) => {
+  app.get("/properties", authenticateToken, (req, res) => {
+    db.query(
+      `
+      SELECT
+        properties.*,
+        akuns.name AS ownerName,
+        akuns.city AS ownerCity,
+        akuns.phone_number
+      FROM properties
+      JOIN akuns
+        ON properties.userId = akuns.id
+      WHERE properties.userId = ?
+      ORDER BY properties.id DESC
+      `,
+      [req.userId],
+      (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            message: "Gagal mengambil data",
+          });
+        }
+
+        const data = result.map((item) => ({
+          ...item,
+          images: JSON.parse(item.images || "[]"),
+          deskripsi: JSON.parse(item.deskripsi || "[]"),
+        }));
+
+        res.json(data);
+      }
+    );
+  });
+
+app.get("/propertiesAll", (req, res) => {
   db.query(
     `SELECT
       properties.*,
@@ -176,7 +212,7 @@ app.get("/properties", (req, res) => {
       akuns.phone_number
     FROM properties
     JOIN akuns
-      ON properties.userId = akuns.id
+    ON properties.userId = akuns.id
     ORDER BY properties.id DESC
     LIMIT 3`,
     (err, result) => {

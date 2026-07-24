@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 function Rent() {
   const [currentImage, setCurrentImage] = useState({});
   const [properties, setProperties] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const propertiesPerPage = 9;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,6 +18,18 @@ function Rent() {
       .then((data) => setProperties(data))
       .catch(console.error);
   }, []);
+
+  const indexOfLastProperty = currentPage * propertiesPerPage;
+  const indexOfFirstProperty = indexOfLastProperty - propertiesPerPage;
+
+  const currentProperties = properties.slice(
+    indexOfFirstProperty,
+    indexOfLastProperty
+  );
+
+  const totalPages = Math.ceil(
+    properties.length / propertiesPerPage
+  );
 
   const nextImage = (property) => {
     setCurrentImage((prev) => {
@@ -58,7 +72,7 @@ function Rent() {
       </p>
 
       <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
-        {properties.map((property) => (
+        {currentProperties.map((property) => (
           <div
             key={property.id}
             className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl duration-300 cursor-pointer"
@@ -108,36 +122,42 @@ function Rent() {
                   ))}
                 </div>
               )}
-              <span className="absolute top-4 left-4 bg-blue-800 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                Disewa
-              </span>
+              <div className="absolute top-4 left-4 flex gap-2">
+                  <span className="bg-blue-700 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
+                    Disewakan
+                  </span>
+
+                  <span className="bg-white/90 text-slate-800 text-xs font-semibold px-3 py-1 rounded-full shadow backdrop-blur">
+                    {property.building}
+                  </span>
+                </div>
             </div>
             <div className="p-6">
-              <h2 className="font-bold text-2xl">
+              <h2 className="font-bold text-xl">
                 {property.name}
               </h2>
-              <div className="flex items-center gap-2 mt-3 text-gray-500">
+              <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
                 <MapPin size={18} />
-                {property.city}
+                {property.district}, {property.village}
               </div>
-              <h3 className="text-2xl text-blue-800 font-bold mt-5">
+              <h3 className="text-2xl text-green-600 font-bold mt-5">
                 Rp {Number(property.price).toLocaleString("id-ID")}
               </h3>
               <div className="grid grid-cols-4 mt-6 border-t pt-5">
                 <div className="flex flex-col items-center">
-                  <BedDouble className="text-blue-700" />
+                  <BedDouble size={20} className="text-blue-700 mb-1" />
                   <span>{property.kt} KT</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <Bath className="text-blue-700" />
+                  <Bath size={20} className="text-blue-700 mb-1" />
                   <span>{property.km} KM</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <LandPlot className="text-blue-700"/>
+                  <LandPlot size={20} className="text-blue-700 mb-1"/>
                   <p>{property.luasTanah} m²</p>
                 </div>
                 <div className="flex flex-col items-center">
-                  <House className="text-blue-700"/>
+                  <House size={20} className="text-blue-700 mb-1"/>
                   <p>{property.luasBangunan} m²</p>
                 </div>
               </div>
@@ -175,6 +195,39 @@ function Rent() {
           </div>
         ))}
       </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-12">
+          <button
+            onClick={() => setCurrentPage((prev) => prev - 1)}
+            disabled={currentPage === 1}
+            className="px-4 py-2 rounded-2xl border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:bg-blue-300"
+          >
+            Sebelumnya
+          </button>
+
+          {[...Array(totalPages)].map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(index + 1)}
+              className={`w-10 h-10 rounded-3xl border-gray-300 font-semibold transition cursor-pointer ${
+                currentPage === index + 1
+                  ? "bg-blue-700 text-white"
+                  : "bg-white border hover:bg-blue-300"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 rounded-2xl border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:bg-blue-300"
+          >
+            Berikutnya
+          </button>
+        </div>
+      )}
       {properties.length === 0 && (
         <div className="text-center py-24 text-gray-500">
           Belum ada properti disewakan.

@@ -19,7 +19,7 @@ function DashboardIntern() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    fetch("http://localhost:5000/property", {
+    fetch("http://localhost:5000/properties", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -107,10 +107,10 @@ function DashboardIntern() {
 
                     <div className="flex items-center gap-2 text-gray-500 mt-3">
                       <MapPin size={16} />
-                      {item.city}
+                      {item.district}, {item.village}
                     </div>
 
-                    <div className="text-2xl font-bold text-blue-800 mt-4">
+                    <div className="text-2xl font-bold text-green-600 mt-4">
                       Rp {Number(item.price).toLocaleString("id-ID")}
                     </div>
 

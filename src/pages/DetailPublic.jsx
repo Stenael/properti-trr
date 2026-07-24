@@ -2,15 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-
-import {
-  MapPin,
-  BedDouble,
-  Bath,
-  Ruler,
-  Zap,
-  FileText,
-} from "lucide-react";
+import {MapPin, BedDouble, Bath, LandPlot, House, Zap, FileText} from "lucide-react";
 
 function DetailPublic() {
   const { id } = useParams();
@@ -79,29 +71,29 @@ function DetailPublic() {
             </h1>
             <div className="flex items-center gap-2 mt-3 text-gray-500">
               <MapPin size={18} />
-              {property.address}, {property.city},{" "}
-              {property.provinsi}
+              {property.address}, {property.village},{" "}
+              {property.district}
             </div>
             <div className="mt-8 grid grid-cols-3 md:grid-cols-6 gap-6">
               <div className="text-center">
                 <BedDouble className="mx-auto text-blue-700" />
                 <p>{property.kt}</p>
-                <small>Kamar</small>
+                <small>Kamar Tidur</small>
               </div>
               <div className="text-center">
                 <Bath className="mx-auto text-blue-700" />
                 <p>{property.km}</p>
-                <small>KM</small>
+                <small>Kamar Mandi</small>
               </div>
               <div className="text-center">
-                <Ruler className="mx-auto text-blue-700" />
+                <LandPlot className="mx-auto text-blue-700" />
                 <p>{property.luasTanah} m²</p>
-                <small>LT</small>
+                <small>Luas Tanah</small>
               </div>
               <div className="text-center">
-                <Ruler className="mx-auto text-blue-700" />
+                <House className="mx-auto text-blue-700" />
                 <p>{property.luasBangunan} m²</p>
-                <small>LB</small>
+                <small>Luas Bangunan</small>
               </div>
               <div className="text-center">
                 <Zap className="mx-auto text-blue-700" />
@@ -119,13 +111,13 @@ function DetailPublic() {
               <h2 className="text-2xl font-bold mb-5">
                 Deskripsi
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-0 bg-blue-50 rounded-xl">
                 {property.deskripsi.map((item, index) => (
                   <div
                     key={index}
-                    className="bg-slate-50 rounded-xl p-5"
+                    className="p-3"
                   >
-                    • {item}
+                    {item}
                   </div>
                 ))}
               </div>
@@ -134,13 +126,10 @@ function DetailPublic() {
 
           <div>
             <div className="bg-white rounded-2xl shadow-xl p-8">
-              <h2 className="text-3xl font-bold text-blue-800">
+              <h2 className="text-3xl font-bold text-green-600">
                 Rp {formatPrice(property.price)}
               </h2>
-              <button className="mt-8 w-full h-12 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-semibold">
-                Hubungi Penjual
-              </button>
-              <button className="mt-4 w-full h-12 rounded-xl border border-blue-700 text-blue-700 hover:bg-blue-50 font-semibold">
+              <button className="mt-4 w-full h-12 rounded-xl border border-green-700 text-green-700 hover:bg-green-700 hover:text-white font-semibold cursor-pointer">
                 WhatsApp
               </button>
             </div>
