@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Search, MapPin, Wallet } from "lucide-react";
 
-function SearchNav() {
+function SearchNav({onSearch}) {
   const handleSearch = (e) => {
     e.preventDefault();
 
-    console.log({
+    onSearch({
       keyword,
       district,
       village,
@@ -31,27 +31,26 @@ function SearchNav() {
   }, []);
 
   const handleDistrictChange = async (e) => {
-    const districtId = e.target.value;
+    const districtName = e.target.value;
 
-    setDistrict(districtId);
+    setDistrict(districtName);
+
+    const selected = districts.find(
+      (d) => d.name === districtName
+    );
+
+    const districtId = selected?.id;
     setVillage("");
-
+    
     if (!districtId) {
       setVillages([]);
       return;
     }
-
-    try {
-      const res = await fetch(
-        `https://www.emsifa.com/api-wilayah-indonesia/api/villages/${districtId}.json`
-      );
-
-      const data = await res.json();
-
-      setVillages(data);
-    } catch (err) {
-      console.log(err);
-    }
+    const res = await fetch(
+      `https://www.emsifa.com/api-wilayah-indonesia/api/villages/${districtId}.json`
+    );
+    const data = await res.json();
+    setVillages(data);  
   };
 
   return (
@@ -59,9 +58,9 @@ function SearchNav() {
       <div className="max-w-7xl mx-auto px-6 flex justify-center">
         <form
           onSubmit={handleSearch}
-          className="bg-white rounded-2xl shadow-2xl flex items-center overflow-hidden w-full max-w-6xl"
+          className="bg-white rounded-2xl shadow-2xl flex flex-col lg:flex-row w-full max-w-6xl overflow-hidden"
         >
-          <div className="flex items-center flex-1 px-6">
+          <div className="flex items-center flex-1 px-6 w-full">
             <Search className="text-blue-800" size={22} />
             <input
               type="text"
@@ -71,8 +70,8 @@ function SearchNav() {
               className="w-full h-16 px-4 outline-none text-gray-700 placeholder:text-gray-400"
             />
           </div>
-          <div className="h-10 w-px bg-gray-300"></div>
-          <div className="flex items-center px-5">
+          <div className="hidden md:block h-10 w-px bg-gray-300"></div>
+          <div className="flex items-center px-5 w-full lg:w-auto">
             <MapPin className="text-blue-800 mr-2" size={20} />
             <select
               value={district}
@@ -82,14 +81,14 @@ function SearchNav() {
               <option value="">Semua Kecamatan</option>
 
               {districts.map((item) => (
-                <option key={item.id} value={item.id}>
+                <option key={item.id} value={item.name}>
                   {item.name}
                 </option>
               ))}
             </select>
           </div>
-          <div className="h-10 w-px bg-gray-300"></div>
-          <div className="flex items-center px-5">
+          <div className="hidden md:block h-10 w-px bg-gray-300"></div>
+          <div className="flex items-center px-5 w-full lg:w-auto">
             <MapPin className="text-blue-800 mr-2" size={20} />
             <select
               value={village}
@@ -106,8 +105,8 @@ function SearchNav() {
               ))}
             </select>
           </div>
-          <div className="h-10 w-px bg-gray-300"></div>
-          <div className="flex items-center px-5">
+          <div className="hidden md:block h-10 w-px bg-gray-300"></div>
+          <div className="flex items-center px-5 w-full lg:w-auto">
             <Wallet className="text-blue-800 mr-2" size={20} />
             <select
               value={sortPrice}
@@ -123,6 +122,7 @@ function SearchNav() {
             <div className="bg-gray-100 rounded-xl p-1 shadow-inner">
               <button
                 type="submit"
+                onClick={handleSearch}
                 className="h-12 px-8 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-105 shadow-lg cursor-pointer"
               >
                 <Search size={18} />

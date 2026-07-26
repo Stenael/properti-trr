@@ -10,6 +10,8 @@ import Question from '../pages/Question'
 import Promotion from '../pages/Promotion'
 import Profile from '../pages/Profile'
 import DetailPublic from '../pages/DetailPublic'
+import Nonaktif from '../pages/Nonaktif'
+import Edit from '../pages/Edit'
 import PublicRoute from '../routes/PublicRoutes'
 import PrivateRoute from '../routes/PrivateRoutes'
 
@@ -39,6 +41,24 @@ function MainMenu() {
           element={
             <PrivateRoute>
               <Profile />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/nonaktif"
+          element={
+            <PrivateRoute>
+              <Nonaktif />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/edit"
+          element={
+            <PrivateRoute>
+              <Edit />
             </PrivateRoute>
           }
         />

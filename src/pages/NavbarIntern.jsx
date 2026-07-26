@@ -35,10 +35,17 @@ function NavbarIntern() {
 
         <div className="flex items-center gap-8 text-gray-700">
           <button
-            onClick={() => navigate("/dashboardIntern")}
+            onClick={() => navigate("/")}
             className="font-medium text-gray-700 hover:text-blue-500 transition cursor-pointer"
           >
             Beranda
+          </button>
+
+          <button
+            onClick={() => navigate("/dashboardIntern")}
+            className="font-medium text-gray-700 hover:text-blue-500 transition cursor-pointer"
+          >
+            Properti
           </button>
 
           <button

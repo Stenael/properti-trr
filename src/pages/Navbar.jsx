@@ -1,50 +1,56 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 
 function Navbar() {
+  const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleDashboard = async () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-        navigate("/login");
-        return;
+      navigate("/login");
+      return;
     }
 
     const res = await fetch("http://localhost:5000/checklogin", {
-        headers:{
-            Authorization:`Bearer ${token}`
-        }
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
-    if(res.ok){
-        navigate("/dashboardIntern");
-    }else{
-        localStorage.removeItem("token");
-        navigate("/login");
+    if (res.ok) {
+      navigate("/dashboardIntern");
+    } else {
+      localStorage.removeItem("token");
+      navigate("/login");
     }
   };
 
   return (
-    <nav className="w-full bg-white shadow-md border-b border-gray-200 sticky top-0 z-2">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <div
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 cursor-pointer"
-        >
-          <h1 className="text-2xl font-bold text-blue-800">
-            TRUST234
-          </h1>
+    <nav className="w-full bg-white shadow-md border-b border-gray-200 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center">
+
+        <div className="flex-1">
+          <div
+            onClick={() => navigate("/")}
+            className="cursor-pointer w-fit"
+          >
+            <h1 className="text-2xl font-bold text-blue-800">
+              TRUST234
+            </h1>
+          </div>
         </div>
 
-        <div className="hidden md:flex items-center gap-10">
+        <div className="hidden md:flex items-center justify-center gap-10 flex-1">
           <button
             onClick={() => navigate("/")}
             className="font-medium text-gray-700 hover:text-blue-500 transition cursor-pointer"
           >
             Beranda
           </button>
+
           <button
             onClick={() => navigate("/sale")}
             className="font-medium text-gray-700 hover:text-blue-500 transition cursor-pointer"
@@ -58,24 +64,71 @@ function Navbar() {
           >
             Disewa
           </button>
+        </div>
 
+        <div className="hidden md:flex flex-1 justify-end">
           <button
-            onClick={() => navigate("/question")}
-            className="font-medium text-gray-700 hover:text-blue-500 transition cursor-pointer"
+            onClick={handleDashboard}
+            className="text-blue-800 font-semibold hover:text-blue-500 transition cursor-pointer"
           >
-            FAQ
+            Masuk Dashboard
           </button>
         </div>
 
         <button
-          onClick={handleDashboard}
-          className="text-blue-800 font-semibold hover:underline hover:text-blue-500 transition duration-200 cursor-pointer"
+          onClick={() => setOpen(!open)}
+          className="md:hidden ml-auto text-blue-800"
         >
-          Masuk Dashboard
+          {open ? <X size={30} /> : <Menu size={30} />}
         </button>
+
       </div>
+
+      {open && (
+        <div className="md:hidden bg-white shadow-md">
+          <button
+            onClick={() => {
+              navigate("/");
+              setOpen(false);
+            }}
+            className="w-full text-left px-6 py-4 hover:bg-gray-100"
+          >
+            Beranda
+          </button>
+
+          <button
+            onClick={() => {
+              navigate("/sale");
+              setOpen(false);
+            }}
+            className="w-full text-left px-6 py-4 hover:bg-gray-100"
+          >
+            Dijual
+          </button>
+
+          <button
+            onClick={() => {
+              navigate("/rent");
+              setOpen(false);
+            }}
+            className="w-full text-left px-6 py-4 hover:bg-gray-100"
+          >
+            Disewa
+          </button>
+
+          <button
+            onClick={() => {
+              handleDashboard();
+              setOpen(false);
+            }}
+            className="w-full text-left px-6 py-4 text-blue-700 font-semibold hover:bg-gray-100"
+          >
+            Masuk Dashboard
+          </button>
+        </div>
+      )}
     </nav>
   );
 }
 
-export default Navbar;  
+export default Navbar;

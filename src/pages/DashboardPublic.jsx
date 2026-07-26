@@ -184,7 +184,7 @@ function DashboardPublic() {
                   Saya tertarik dengan properti yang Anda pasarkan.
 
                   Properti : ${item.name}
-                  Lokasi : ${item.city}, ${item.provinsi}
+                  Lokasi : ${item.village}, ${item.district}
                   Harga : Rp ${formatPrice(item.price)}
 
                   Apakah properti ini masih tersedia?`;

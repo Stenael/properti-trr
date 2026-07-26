@@ -114,6 +114,8 @@ app.post(
       km,
       sertifikat,
       deskripsi,
+      date,
+      status
     } = req.body;
     const imagePaths = req.files.map(file => file.filename);
     db.query(
@@ -134,9 +136,11 @@ app.post(
         km,
         sertifikat,
         images,
-        deskripsi
+        deskripsi,
+        date,
+        status
       )
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,Now(),0)`,
       [
         req.userId,
         name,
@@ -153,7 +157,9 @@ app.post(
         km,
         sertifikat,
         JSON.stringify(imagePaths),
-        deskripsi
+        deskripsi,
+        date,
+        status
       ],
       (err,result)=>{
         if(err){
@@ -295,7 +301,17 @@ app.get("/properties/rent", (req, res) => {
 
 app.get("/property/:id", (req, res) => {
   db.query(
-    "SELECT * FROM properties WHERE id=?",
+    `
+    SELECT
+      properties.*,
+      akuns.name AS ownerName,
+      akuns.city AS ownerCity,
+      akuns.phone_number
+    FROM properties
+    JOIN akuns
+      ON properties.userId = akuns.id
+    WHERE properties.id = ?
+    `,
     [req.params.id],
     (err, result) => {
       if (err)

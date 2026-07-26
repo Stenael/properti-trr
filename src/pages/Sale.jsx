@@ -12,6 +12,18 @@ function Sale() {
   const propertiesPerPage = 9;
   const navigate = useNavigate();
 
+  const [filters, setFilters] = useState({
+    keyword: "",
+    district: "",
+    village: "",
+    sortPrice: "",
+  });
+
+  const handleSearch = (data) => {
+    setFilters(data);
+    setCurrentPage(1);
+  };
+
   useEffect(() => {
     fetch("http://localhost:5000/properties/sale")
       .then((res) => res.json())
@@ -19,16 +31,52 @@ function Sale() {
       .catch(console.error);
   }, []);
 
+  const formatPrice = (price) =>
+    Number(price).toLocaleString("id-ID");
+
+  const filteredProperties = [...properties]
+  .filter((property) => {
+    const keyword = filters.keyword.toLowerCase();
+
+    const keywordMatch =
+      filters.keyword === "" ||
+      (property.name || "").toLowerCase().includes(keyword) ||
+      (property.district || "").toLowerCase().includes(keyword) ||
+      (property.village || "").toLowerCase().includes(keyword) ||
+      (property.address || "").toLowerCase().includes(keyword);
+
+    const districtMatch =
+      filters.district === "" ||
+      property.district === filters.district;
+
+    const villageMatch =
+      filters.village === "" ||
+      property.village === filters.village;
+
+    return keywordMatch && districtMatch && villageMatch;
+  })
+  .sort((a, b) => {
+    if (filters.sortPrice === "asc") {
+      return Number(a.price) - Number(b.price);
+    }
+
+    if (filters.sortPrice === "desc") {
+      return Number(b.price) - Number(a.price);
+    }
+
+    return 0;
+  });
+
   const indexOfLastProperty = currentPage * propertiesPerPage;
   const indexOfFirstProperty = indexOfLastProperty - propertiesPerPage;
 
-  const currentProperties = properties.slice(
+  const currentProperties = filteredProperties.slice(
     indexOfFirstProperty,
     indexOfLastProperty
   );
 
   const totalPages = Math.ceil(
-    properties.length / propertiesPerPage
+    filteredProperties.length / propertiesPerPage
   );
 
   const nextImage = (property) => {
@@ -62,7 +110,7 @@ function Sale() {
   return (
     <>
       <Navbar />
-      <SearchNav />
+      <SearchNav onSearch={handleSearch}/>
       <div className="max-w-7xl mx-auto px-8 py-10">
         <h1 className="text-4xl font-bold text-blue-900 mb-2">
           Properti Dijual
@@ -162,7 +210,7 @@ function Sale() {
                   </div>
                 </div>
                 <div className="mt-6 border-t pt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1">
                     <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center">
                       <User className="text-blue-700" size={20}/>
                     </div>
@@ -178,19 +226,28 @@ function Sale() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-
+                      const message = `Halo ${property.ownerName}, 
+                  Saya tertarik dengan properti yang Anda pasarkan.
+  
+                  Properti : ${property.name}
+                  Lokasi : ${property.village}, ${property.district}
+                  Harga : Rp ${formatPrice(property.price)}
+  
+                  Apakah properti ini masih tersedia?`;
                       window.open(
-                        `https://wa.me/${property.phone_number.replace(/^0/, "62")}`,
+                        `https://wa.me/${property.phone_number.replace(
+                          /^0/,
+                          "62"
+                        )}?text=${encodeURIComponent(message)}`,
                         "_blank"
                       );
                     }}
-                    className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-xl transition"
+                    className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-xl transition cursor-pointer"
                   >
-                    <div className="flex items-center gap-2">
-                      <MessageCircle size={20} />
-                      <div>Whatsapp</div>  
+                    <div className="flex items-center gap-1">
+                      <MessageCircle size={18} />
+                      <div>WhatsApp</div>
                     </div>
-                  
                   </button>
                 </div>
               </div>

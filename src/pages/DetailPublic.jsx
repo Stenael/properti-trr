@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import {MapPin, BedDouble, Bath, LandPlot, House, Zap, FileText} from "lucide-react";
+import {MapPin, BedDouble, Bath, LandPlot, House, Zap, FileText, User, MessageCircle} from "lucide-react";
 
 function DetailPublic() {
   const { id } = useParams();
@@ -129,8 +129,47 @@ function DetailPublic() {
               <h2 className="text-3xl font-bold text-green-600">
                 Rp {formatPrice(property.price)}
               </h2>
-              <button className="mt-4 w-full h-12 rounded-xl border border-green-700 text-green-700 hover:bg-green-700 hover:text-white font-semibold cursor-pointer">
-                WhatsApp
+              <div className="mt-6 border-t pt-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <User className="text-blue-700" size={22} />
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-gray-800">
+                      {property.ownerName}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {property.ownerCity}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const message = `Halo ${property.ownerName}, 
+              Saya tertarik dengan properti yang Anda pasarkan.
+
+              Properti : ${property.name}
+              Lokasi : ${property.village}, ${property.district}
+              Harga : Rp ${formatPrice(property.price)}
+
+              Apakah properti ini masih tersedia?`;
+                  window.open(
+                    `https://wa.me/${property.phone_number.replace(
+                      /^0/,
+                      "62"
+                    )}?text=${encodeURIComponent(message)}`,
+                    "_blank"
+                  );
+                }}
+                className="mt-6 w-full h-12 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold cursor-pointer"
+              >
+                <div className="flex items-center gap-1 justify-center">
+                  <MessageCircle size={18} />
+                  <div>WhatsApp</div>
+                </div>
               </button>
             </div>
           </div>
