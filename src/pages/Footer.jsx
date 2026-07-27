@@ -17,13 +17,13 @@ function Footer() {
           <div>
             <div className="flex items-center gap-3 mb-5">
               <h1 className="text-2xl font-bold text-white">
-                TRUST234
+                TRUSTPROP
               </h1>
             </div>
 
             <p className="text-blue-100 leading-7">
-              Platform pencarian rumah, apartemen,
-              ruko, dan properti terpercaya untuk
+              Platform pencarian properti rumah dan
+              ruko terpercaya untuk
               jual maupun sewa di Surabaya.
             </p>
           </div>

@@ -38,7 +38,7 @@ function Navbar() {
             className="cursor-pointer w-fit"
           >
             <h1 className="text-2xl font-bold text-blue-800">
-              TRUST234
+              TRUSTPROP
             </h1>
           </div>
         </div>

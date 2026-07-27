@@ -9,6 +9,12 @@ function Login() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "",
+    message: "",
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -24,22 +30,66 @@ function Login() {
       const data = await response.json();
 
       if (!response.ok) {
-        alert(data.message || 'Login failed');
+        setPopup({
+          show: true,
+          type: "error",
+          message: data.message || "Login gagal",
+        });
+
+        setTimeout(() => {
+          setPopup({
+            show: false,
+            type: "",
+            message: "",
+          });
+        }, 2000);
+
         return;
       }
 
       if (!data.token) {
-        alert("Token not found in response");
+        setPopup({
+          show: true,
+          type: "error",
+          message: "Token tidak ditemukan",
+        });
+
+        setTimeout(() => {
+          setPopup({
+            show: false,
+            type: "",
+            message: "",
+          });
+        }, 2000);
+
         return;
       }
 
       localStorage.setItem('token', data.token);
-      alert('Login successful!');
+      setPopup({
+        show: true,
+        type: "success",
+        message: "Login berhasil!",
+      });
 
-      navigate('/dashboardIntern');
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('An error occurred during login');
+      setTimeout(() => {
+        navigate("/dashboardIntern");
+      }, 2000);
+          } catch (error) {
+            console.error('Login error:', error);
+            setPopup({
+        show: true,
+        type: "error",
+        message: "Terjadi kesalahan pada server",
+      });
+
+      setTimeout(() => {
+        setPopup({
+          show: false,
+          type: "",
+          message: "",
+        });
+      }, 2000);
     }
   };
 
@@ -118,6 +168,19 @@ function Login() {
             </div>
         </div>
         </div>
+        {popup.show && (
+          <div className="fixed top-6 right-6 z-50">
+            <div
+              className={`px-6 py-4 rounded-xl shadow-xl text-white font-semibold transition-all duration-300 ${
+                popup.type === "success"
+                  ? "bg-blue-800"
+                  : "bg-red-600"
+              }`}
+            >
+              {popup.message}
+            </div>
+          </div>
+        )}
     </div>
     );
 }

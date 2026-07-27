@@ -108,6 +108,18 @@ function DetailPublic() {
             </div>
 
             <div className="mt-10">
+              <h2 className="text-2xl font-bold mb-2">
+                Dibuat tanggal
+              </h2>
+              <div className="mb-5">
+                <p>
+                  {new Date(property.created_at).toLocaleDateString("id-ID", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
               <h2 className="text-2xl font-bold mb-5">
                 Deskripsi
               </h2>

@@ -16,6 +16,8 @@ const authenticateToken = require('./auth');
 app.use('/uploads', express.static('uploads'));
 const multer = require("multer");
 const path = require("path");
+
+const fs = require("fs");
 app.get("/", (req, res) => {
     res.send("Backend berhasil berjalan!");
 });
@@ -176,38 +178,184 @@ app.post(
   }
 );
 
-  app.get("/properties", authenticateToken, (req, res) => {
+app.put(
+  "/property/:id",
+  authenticateToken,
+  upload.array("images", 20),
+  (req, res) => {
+    const {
+      name,
+      address,
+      village,
+      district,
+      building,
+      price,
+      luasTanah,
+      luasBangunan,
+      listrik,
+      type,
+      kt,
+      km,
+      sertifikat,
+      deskripsi,
+    } = req.body;
+
     db.query(
-      `
-      SELECT
-        properties.*,
-        akuns.name AS ownerName,
-        akuns.city AS ownerCity,
-        akuns.phone_number
-      FROM properties
-      JOIN akuns
-        ON properties.userId = akuns.id
-      WHERE properties.userId = ?
-      ORDER BY properties.id DESC
-      `,
-      [req.userId],
+      "SELECT images FROM properties WHERE id=? AND userId=?",
+      [req.params.id, req.userId],
       (err, result) => {
-        if (err) {
+        if (err)
           return res.status(500).json({
-            message: "Gagal mengambil data",
+            message: "Server Error",
           });
+
+        if (result.length === 0)
+          return res.status(404).json({
+            message: "Properti tidak ditemukan",
+          });
+
+        let images = JSON.parse(result[0].images || "[]");
+
+        // jika upload gambar baru
+        if (req.files && req.files.length > 0) {
+
+          // hapus gambar lama
+          images.forEach((img) => {
+            const filePath = path.join(__dirname, "uploads", img);
+
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+            }
+          });
+
+          images = req.files.map((file) => file.filename);
         }
 
-        const data = result.map((item) => ({
-          ...item,
-          images: JSON.parse(item.images || "[]"),
-          deskripsi: JSON.parse(item.deskripsi || "[]"),
-        }));
+        db.query(
+          `
+          UPDATE properties
+          SET
+            name=?,
+            address=?,
+            village=?,
+            district=?,
+            building=?,
+            price=?,
+            luasTanah=?,
+            luasBangunan=?,
+            listrik=?,
+            type=?,
+            kt=?,
+            km=?,
+            sertifikat=?,
+            images=?,
+            deskripsi=?
+          WHERE id=? AND userId=?
+          `,
+          [
+            name,
+            address,
+            village,
+            district,
+            building,
+            price,
+            luasTanah,
+            luasBangunan,
+            listrik,
+            type,
+            kt,
+            km,
+            sertifikat,
+            JSON.stringify(images),
+            deskripsi,
+            req.params.id,
+            req.userId,
+          ],
+          (err) => {
+            if (err) {
+              console.log(err);
 
-        res.json(data);
+              return res.status(500).json({
+                message: "Gagal mengupdate properti",
+              });
+            }
+
+            res.json({
+              message: "Properti berhasil diperbarui",
+            });
+          }
+        );
       }
     );
-  });
+  }
+);
+
+app.get("/properties", authenticateToken, (req, res) => {
+  db.query(
+    `
+    SELECT
+      properties.*,
+      akuns.name AS ownerName,
+      akuns.city AS ownerCity,
+      akuns.phone_number,
+      CASE
+        WHEN DATEDIFF(NOW(), properties.created_at) >= 30 THEN 1
+        ELSE properties.status
+      END AS status
+    FROM properties
+    JOIN akuns
+      ON properties.userId = akuns.id
+    WHERE properties.userId = ?
+    ORDER BY properties.id DESC
+    `,
+    [req.userId],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          message: "Gagal mengambil data",
+        });
+      }
+
+      const data = result.map((item) => ({
+        ...item,
+        images: JSON.parse(item.images || "[]"),
+        deskripsi: JSON.parse(item.deskripsi || "[]"),
+      }));
+
+      res.json(data);
+    }
+  );
+});
+
+app.put("/properties/:id/reactivate", authenticateToken, (req, res) => {
+  db.query(
+    `
+    UPDATE properties
+    SET
+      created_at = NOW(),
+      status = 0
+    WHERE id = ? AND userId = ?
+    `,
+    [req.params.id, req.userId],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          message: "Gagal mengaktifkan kembali promosi",
+        });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          message: "Properti tidak ditemukan",
+        });
+      }
+
+      res.json({
+        message: "Promosi berhasil diaktifkan kembali",
+      });
+    }
+  );
+});
 
 app.get("/propertiesAll", (req, res) => {
   db.query(

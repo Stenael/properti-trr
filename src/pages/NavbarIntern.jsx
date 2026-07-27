@@ -29,7 +29,7 @@ function NavbarIntern() {
           onClick={() => navigate("/dashboardIntern")}
         >
           <h1 className="text-2xl font-bold text-blue-800">
-            TRUST234
+            TRUSTPROP
           </h1>
         </div>
 

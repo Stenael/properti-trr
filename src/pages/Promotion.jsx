@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import {ImagePlus, Plus, Trash2, Save, Home, MapPin, Zap, Ruler, FileText, Bed, Bath} from "lucide-react";
 import NavbarIntern from "./NavbarIntern";
 import { useNavigate } from "react-router-dom";
+import Footer from "./Footer";
 
 function Promotion() {
   const navigate = useNavigate();
@@ -189,7 +190,7 @@ function Promotion() {
 
                   <div>
                     <label className="font-medium block mb-2">
-                        Keluarahan
+                        Kelurahan
                     </label>
 
                     <select
@@ -247,7 +248,6 @@ function Promotion() {
                     className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
                   >
                     <option>Rumah</option>
-                    <option>Apartemen</option>
                     <option>Ruko</option>
                     <option>Tanah</option>
                   </select>
@@ -478,6 +478,7 @@ function Promotion() {
           </form>
         </div>
       </div>
+      <Footer/>
     </>
   );
 }

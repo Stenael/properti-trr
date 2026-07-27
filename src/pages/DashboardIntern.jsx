@@ -15,6 +15,7 @@ import Footer from "./Footer";
 function DashboardIntern() {
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -38,30 +39,105 @@ function DashboardIntern() {
       });
   }, []);
 
+  const filteredProperties = properties.filter((item) => {
+    if (statusFilter === "all") return true;
+
+    if (statusFilter === "active") return item.status === 0;
+
+    if (statusFilter === "inactive") return item.status === 1;
+  });
+
+  const handleReactivate = async (id) => {
+    const token = localStorage.getItem("token");
+
+    const confirm = window.confirm(
+      "Aktifkan kembali promosi ini selama 30 hari?"
+    );
+
+    if (!confirm) return;
+
+    const res = await fetch(
+      `http://localhost:5000/properties/${id}/reactivate`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await res.json();
+
+    alert(data.message);
+
+    if (res.ok) {
+      setProperties((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status: 0,
+                created_at: new Date().toISOString(),
+              }
+            : item
+        )
+      );
+    }
+  };
+
   return (
     <>
       <NavbarIntern />
       <div className="bg-white max-h-full ">
         <div className="max-w-7xl mx-auto px-8 py-10">
-
           <div className="flex justify-between items-center mb-10">
             <div>
               <h1 className="text-3xl font-bold text-blue-800">
                 Properti Saya
               </h1>
-
               <p className="text-gray-500 mt-2">
                 Kelola seluruh promosi properti Anda.
               </p>
             </div>
-
-            <button
-              onClick={() => navigate("/promotion")}
-              className="bg-blue-800 hover:bg-blue-900 text-white px-6 h-12 rounded-xl flex items-center gap-2 cursor-pointer"
-            >
-              <Plus size={18} />
-              Tambah Properti
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setStatusFilter("all")}
+                className={`px-4 h-11 rounded-xl cursor-pointer ${
+                  statusFilter === "all"
+                    ? "bg-blue-800 text-white"
+                    : "bg-blue-200"
+                }`}
+              >
+                Semua
+              </button>
+              <button
+                onClick={() => setStatusFilter("active")}
+                className={`px-4 h-11 rounded-xl cursor-pointer ${
+                  statusFilter === "active"
+                    ? "bg-green-600 text-white"
+                    : "bg-blue-200"
+                }`}
+              >
+                Aktif
+              </button>
+              <button
+                onClick={() => setStatusFilter("inactive")}
+                className={`px-4 h-11 rounded-xl cursor-pointer ${
+                  statusFilter === "inactive"
+                    ? "bg-red-600 text-white"
+                    : "bg-red-200"
+                }`}
+              >
+                Tidak Aktif
+              </button>
+              <button
+                onClick={() => navigate("/promotion")}
+                className="bg-blue-800 hover:bg-blue-900 text-white px-6 h-12 rounded-xl flex items-center gap-2 cursor-pointer"
+              >
+                <Plus size={18} />
+                Tambah Properti
+              </button>
+            </div>
           </div>
 
           {properties.length === 0 ? (
@@ -76,7 +152,7 @@ function DashboardIntern() {
             </div>
           ) : (
             <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
-              {properties.map((item) => (
+              {filteredProperties.map((item) => (
                 <div
                   key={item.id}
                   className="bg-white rounded-2xl shadow hover:shadow-xl duration-300 overflow-hidden"
@@ -105,7 +181,7 @@ function DashboardIntern() {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-gray-500 mt-3">
+                    <div className="flex items-center gap-2 text-gray-500 mt-3 text-xs">
                       <MapPin size={16} />
                       {item.district}, {item.village}
                     </div>
@@ -144,16 +220,23 @@ function DashboardIntern() {
                     </div>
 
                     <div className="flex gap-3 mt-8 ">
-
                       <button
+                        onClick={() => navigate(`/edit/${item.id}`)}
                         className="flex-1 h-11 rounded-xl bg-blue-800 text-white hover:bg-blue-900 flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Pencil size={17} />
                         Edit
                       </button>
 
+                      {item.status === 1 && (
+                        <button
+                          onClick={() => handleReactivate(item.id)}
+                          className="h-11 rounded-xl bg-green-600 hover:bg-green-700 text-white px-3 cursor-pointer"
+                        >
+                          Aktifkan Kembali
+                        </button>
+                      )}
                     </div>
-
                   </div>
                 </div>
               ))}

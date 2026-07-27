@@ -55,7 +55,7 @@ function MainMenu() {
         />
 
         <Route
-          path="/edit"
+          path="/edit/:id"
           element={
             <PrivateRoute>
               <Edit />
