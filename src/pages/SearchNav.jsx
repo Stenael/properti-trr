@@ -64,7 +64,7 @@ function SearchNav({onSearch}) {
             <Search className="text-blue-800" size={22} />
             <input
               type="text"
-              placeholder="Cari rumah, apartemen, ruko..."
+              placeholder="Cari rumah, ruko, dan tanah"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               className="w-full h-16 px-4 outline-none text-gray-700 placeholder:text-gray-400"

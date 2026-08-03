@@ -15,10 +15,8 @@ function Footer() {
         <div className="grid md:grid-cols-3 gap-10">
 
           <div>
-            <div className="flex items-center gap-3 mb-5">
-              <h1 className="text-2xl font-bold text-white">
-                TRUSTPROP
-              </h1>
+            <div className="flex items-center gap-3 mb-3">
+              <img src="/logo3white.png" alt="Logo" className="w-40" />
             </div>
 
             <p className="text-blue-100 leading-7">
@@ -90,7 +88,7 @@ function Footer() {
           </div>
         </div>
         <div className="border-t border-blue-700 mt-12 pt-6 text-center text-blue-200 text-sm">
-          © {new Date().getFullYear()} TRUST234. All Rights Reserved.
+          © {new Date().getFullYear()} TRUSTPROP. All Rights Reserved.
         </div>
       </div>
     </footer>

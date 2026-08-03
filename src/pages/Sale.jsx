@@ -211,7 +211,7 @@ function Sale() {
                 </div>
                 <div className="mt-6 border-t pt-4 flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                    <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center">
+                    <div className="w-11 h-11 mr-2 rounded-full bg-blue-100 flex items-center justify-center">
                       <User className="text-blue-700" size={20}/>
                     </div>
                     <div>

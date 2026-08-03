@@ -28,9 +28,7 @@ function NavbarIntern() {
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => navigate("/dashboardIntern")}
         >
-          <h1 className="text-2xl font-bold text-blue-800">
-            TRUSTPROP
-          </h1>
+        <img src="/logo3.png" alt="Logo" className="w-30" />
         </div>
 
         <div className="flex items-center gap-8 text-gray-700">

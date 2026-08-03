@@ -8,7 +8,8 @@ function Register() {
   const [city, setCity] = useState("");
   const [phone_number, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState("");  
+  const [showNotif, setShowNotif] = useState(false);
 
   const navigate = useNavigate();
 
@@ -33,8 +34,8 @@ function Register() {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Register berhasil! Silakan login.");
-        navigate("/login");
+        setError("");
+        setShowNotif(true);
       } else {
         setError(data.message || "Registration failed");
       }
@@ -48,7 +49,7 @@ function Register() {
         <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden grid md:grid-cols-2">
 
         <div className="hidden md:flex flex-col items-center justify-center bg-gradient-to-br from-blue-800 to-blue-500 p-12 text-white">
-            <img src="/logo.png" alt="Logo" className="w-36 mb-8" />
+            <img src="/logo3white.png" alt="Logo" className="w-56 mb-8" />
             <h1 className="text-4xl font-bold mb-4 text-center">
             Bergabung Bersama Kami
             </h1>
@@ -163,14 +164,14 @@ function Register() {
 
                 <button
                     type="submit"
-                    className="w-full h-12 rounded-xl bg-blue-800 text-white font-semibold hover:bg-blue-600 duration-300"
+                    className="w-full h-12 rounded-xl bg-blue-800 text-white font-semibold hover:bg-blue-600 duration-300 cursor-pointer"
                 >
                     Daftar
                 </button>
                 <button
                     type="button"
                     onClick={() => navigate("/login")}
-                    className="w-full h-12 rounded-xl border border-blue-800 text-blue-800 font-semibold hover:bg-blue-800 hover:text-white duration-300"
+                    className="w-full h-12 rounded-xl border border-blue-800 text-blue-800 font-semibold hover:bg-blue-800 hover:text-white duration-300 cursor-pointer"
                 >
                     Sudah punya akun? Login
                 </button>
@@ -178,6 +179,27 @@ function Register() {
             </div>
         </div>
         </div>
+        {showNotif && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
+                <h2 className="text-2xl font-bold text-gray-800 mt-5">
+                    Registrasi Berhasil
+                </h2>
+                <p className="text-gray-500 mt-2">
+                    Akun berhasil dibuat. Silakan login untuk melanjutkan.
+                </p>
+                <button
+                    onClick={() => {
+                    setShowNotif(false);
+                    navigate("/login");
+                    }}
+                    className="mt-6 w-full h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-semibold cursor-pointer"
+                >
+                    Login Sekarang
+                </button>
+                </div>
+            </div>
+            )}
     </div>
   );
 }

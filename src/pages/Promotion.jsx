@@ -28,7 +28,8 @@ function Promotion() {
   const [districts, setDistricts] = useState([]);
   const [villages, setVillages] = useState([]);
   const [districtId, setDistrictId] = useState("");
-
+  const [exclusive, setExclusive] = useState(0);
+  
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -38,7 +39,11 @@ function Promotion() {
 
   const handleImage = (e) => {
     const files = Array.from(e.target.files);
-    setImages([...images, ...files]);
+    const newImages = [...images, ...files].slice(0, 6);
+    if (images.length + files.length > 6) {
+      alert("Maksimal 6 gambar.");
+    }
+    setImages(newImages);
   };
 
   const addDescription = () => {
@@ -133,6 +138,34 @@ function Promotion() {
     } catch (err) {
       console.log(err);
     }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    fetch("http://localhost:5000/exclusive", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data); // cek hasil
+        setExclusive(data.exclusive);
+      })
+      .catch(console.error);
+  }, []);
+
+  const handlePayment = () => {
+    localStorage.setItem(
+      "promotionData",
+      JSON.stringify({
+        formData,
+        deskripsi,
+      })
+    );
+
+    navigate("/payment");
   };
 
   return (
@@ -403,6 +436,9 @@ function Promotion() {
                       className="hidden"
                       onChange={handleImage}
                     />
+                    <p className="text-xs text-red-500 mt-2">
+                      Maksimal 6 gambar
+                    </p>
                   </label>
                 </div>
 
@@ -429,7 +465,7 @@ function Promotion() {
                 <button
                   type="button"
                   onClick={addDescription}
-                  className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-4 h-11 rounded-xl"
+                  className="flex items-center gap-2 bg-blue-800 hover:bg-blue-900 text-white px-4 h-11 rounded-xl"
                 >
                   <Plus size={18} />
                   Tambah
@@ -466,14 +502,24 @@ function Promotion() {
             </div>
 
             <div className="flex justify-end pt-4">
-              <button
-                onClick={handleSubmit}
-                type="submit"
-                className="bg-blue-800 hover:bg-blue-900 text-white px-8 h-12 rounded-xl flex items-center gap-3 font-semibold shadow-lg"
-              >
-                <Save size={18} />
-                Simpan Properti
-              </button>
+              {/* {exclusive === 1 ? ( */}
+                <button
+                  type="submit"
+                  className="bg-blue-800 hover:bg-blue-900 text-white px-8 h-12 rounded-xl flex items-center gap-3 font-semibold shadow-lg"
+                >
+                  <Save size={18} />
+                  Simpan Properti
+                </button>
+              {/* ) : ( */}
+                {/* <button
+                  type="button"
+                  onClick={handlePayment}
+                  className="bg-green-600 hover:bg-green-700 text-white px-8 h-12 rounded-xl flex items-center gap-3 font-semibold shadow-lg"
+                >
+                  <Save size={18} />
+                  Bayar & Promosikan
+                </button>
+              )} */}
             </div>
           </form>
         </div>

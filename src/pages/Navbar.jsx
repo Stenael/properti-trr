@@ -37,9 +37,7 @@ function Navbar() {
             onClick={() => navigate("/")}
             className="cursor-pointer w-fit"
           >
-            <h1 className="text-2xl font-bold text-blue-800">
-              TRUSTPROP
-            </h1>
+            <img src="/logo3.png" alt="Logo" className="w-30" />
           </div>
         </div>
 
@@ -55,14 +53,14 @@ function Navbar() {
             onClick={() => navigate("/sale")}
             className="font-medium text-gray-700 hover:text-blue-500 transition cursor-pointer"
           >
-            Dijual
+            Jual
           </button>
 
           <button
             onClick={() => navigate("/rent")}
             className="font-medium text-gray-700 hover:text-blue-500 transition cursor-pointer"
           >
-            Disewa
+            Sewa
           </button>
         </div>
 

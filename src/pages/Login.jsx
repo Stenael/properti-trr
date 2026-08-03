@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
-
 function Login() {
   const [formData, setFormData] = useState({ username: '', password: '' });
   const navigate = useNavigate();
@@ -97,7 +96,7 @@ function Login() {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-5">
         <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden grid md:grid-cols-2">
         <div className="hidden md:flex flex-col items-center justify-center bg-gradient-to-br from-blue-800 to-blue-500 p-12 text-white">
-            <h1 className='text-2xl font-semibold mb-5'>TRUST234</h1>
+            <img src="/logo3white.png" alt="Logo" className="w-56 mb-8" />
             <h1 className="text-4xl font-bold mb-4">
             Selamat Datang
             </h1>

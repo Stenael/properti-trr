@@ -33,7 +33,7 @@ app.post('/register', (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     db.query(
-      'INSERT INTO akuns (username, password, name, city, phone_number, email) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO akuns (username, password, name, city, phone_number, email, exclusive) VALUES (?, ?, ?, ?, ?, ?, 0)',
       [username, hashedPassword, name, city, phone_number, email],
       (err) => {
         if (err) return res.status(500).json({ message: 'Error registering user' });
@@ -99,8 +99,13 @@ const upload = multer({
 app.post(
   "/promotion",
   authenticateToken,
-  upload.array("images", 20),
+  upload.array("images", 6),
   (req, res) => {
+     if (!req.files || req.files.length > 6) {
+      return res.status(400).json({
+        message: "Maksimal upload 6 gambar.",
+      });
+    }
     const {
       name,
       address,
@@ -116,7 +121,7 @@ app.post(
       km,
       sertifikat,
       deskripsi,
-      date,
+      created_at,
       status
     } = req.body;
     const imagePaths = req.files.map(file => file.filename);
@@ -139,7 +144,7 @@ app.post(
         sertifikat,
         images,
         deskripsi,
-        date,
+        created_at,
         status
       )
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,Now(),0)`,
@@ -160,7 +165,7 @@ app.post(
         sertifikat,
         JSON.stringify(imagePaths),
         deskripsi,
-        date,
+        created_at,
         status
       ],
       (err,result)=>{
@@ -181,7 +186,7 @@ app.post(
 app.put(
   "/property/:id",
   authenticateToken,
-  upload.array("images", 20),
+  upload.array("images", 6),
   (req, res) => {
     const {
       name,
@@ -215,11 +220,7 @@ app.put(
           });
 
         let images = JSON.parse(result[0].images || "[]");
-
-        // jika upload gambar baru
         if (req.files && req.files.length > 0) {
-
-          // hapus gambar lama
           images.forEach((img) => {
             const filePath = path.join(__dirname, "uploads", img);
 
@@ -298,7 +299,9 @@ app.get("/properties", authenticateToken, (req, res) => {
       akuns.name AS ownerName,
       akuns.city AS ownerCity,
       akuns.phone_number,
+      akuns.exclusive,
       CASE
+        WHEN akuns.exclusive = 1 THEN 0
         WHEN DATEDIFF(NOW(), properties.created_at) >= 30 THEN 1
         ELSE properties.status
       END AS status
@@ -357,6 +360,34 @@ app.put("/properties/:id/reactivate", authenticateToken, (req, res) => {
   );
 });
 
+app.put("/properties/:id/sold", authenticateToken, (req, res) => {
+  db.query(
+    `
+    UPDATE properties
+    SET soldStatus = 1
+    WHERE id = ? AND userId = ?
+    `,
+    [req.params.id, req.userId],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          message: "Gagal mengubah status properti",
+        });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          message: "Properti tidak ditemukan",
+        });
+      }
+
+      res.json({
+        message: "Properti berhasil ditandai sebagai laku",
+      });
+    }
+  );
+});
+
 app.get("/propertiesAll", (req, res) => {
   db.query(
     `SELECT
@@ -367,6 +398,9 @@ app.get("/propertiesAll", (req, res) => {
     FROM properties
     JOIN akuns
     ON properties.userId = akuns.id
+    WHERE properties.soldStatus = 0
+    AND (akuns.exclusive = 1
+          OR DATEDIFF(NOW(), properties.created_at) < 30)
     ORDER BY properties.id DESC
     LIMIT 3`,
     (err, result) => {
@@ -397,7 +431,9 @@ app.get("/properties/sale", (req, res) => {
     FROM properties
     JOIN akuns
       ON properties.userId = akuns.id
-    WHERE properties.type = 'Dijual'
+    WHERE properties.type = 'Dijual' AND properties.soldStatus = 0
+    AND (akuns.exclusive = 1
+        OR DATEDIFF(NOW(), properties.created_at) < 30)
     ORDER BY properties.id DESC`,
     (err, result) => {
       if (err) {
@@ -427,7 +463,9 @@ app.get("/properties/rent", (req, res) => {
     FROM properties
     JOIN akuns
       ON properties.userId = akuns.id
-    WHERE properties.type = 'Disewa'
+    WHERE properties.type = 'Disewa' AND properties.soldStatus = 0
+    AND (akuns.exclusive = 1
+        OR DATEDIFF(NOW(), properties.created_at) < 30)
     ORDER BY properties.id DESC`,
     (err, result) => {
       if (err) {
@@ -481,6 +519,18 @@ app.get("/property/:id", (req, res) => {
       });
     }
   );
+});
+
+app.get("/exclusive", authenticateToken, (req, res) => {
+    db.query(
+        "SELECT id, name, exclusive FROM akuns WHERE id=?",
+        [req.userId],
+        (err, result) => {
+            if (err) return res.sendStatus(500);
+
+            res.json(result[0]);
+        }
+    );
 });
 
 const PORT = 5000;
