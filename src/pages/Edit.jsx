@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavbarIntern from "./NavbarIntern";
-import {ImagePlus, Plus, Trash2, Save, Home, MapPin, Zap, Ruler, FileText, Bed, Bath} from "lucide-react";
+import {ImagePlus, Plus, Trash2, Save, Home, MapPin, Zap, Ruler, FileText, Bed, Bath, Bookmark} from "lucide-react";
 
 function Edit() {
   const { id } = useParams();
@@ -13,6 +13,9 @@ function Edit() {
   const [villages, setVillages] = useState([]);
   const [districtId, setDistrictId] = useState("");
 
+  const [showNotif, setShowNotif] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  
   const [formData, setFormData] = useState({
       name:"",
       address:"",
@@ -105,8 +108,7 @@ function Edit() {
 
   form.append("deskripsi",JSON.stringify(deskripsi)); 
 
-  const handleSubmit=async(e)=>{
-      e.preventDefault();
+  const handleSubmit=async()=>{
 
       const token=localStorage.getItem("token");
 
@@ -120,10 +122,11 @@ function Edit() {
 
       const data=await res.json();
 
-      alert(data.message);
-
       if(res.ok){
-          navigate("/dashboardIntern");
+        setShowConfirm(false);
+        setShowNotif(true);
+      }else{
+          alert(data.message);
       }
   };
 
@@ -174,7 +177,10 @@ function Edit() {
         <h1 className="text-4xl font-bold text-blue-800 mb-10">
           Edit Properti
         </h1>
-        <form onSubmit={handleSubmit} className="space-y-10">
+        <form  onSubmit={(e) => {
+            e.preventDefault();
+            setShowConfirm(true);
+        }} className="space-y-10">
           <div className="border-b border-slate-300 pb-8">
             <h2 className="text-xl font-semibold mb-6">
               Informasi Properti
@@ -514,7 +520,6 @@ function Edit() {
 
           <div className="flex justify-end pt-4">
             <button
-              onClick={handleSubmit}
               type="submit"
               className="bg-blue-800 hover:bg-blue-900 text-white px-8 h-12 rounded-xl flex items-center gap-3 font-semibold shadow-lg"
             >
@@ -524,6 +529,53 @@ function Edit() {
           </div>
         </form>
       </div>
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-96 shadow-xl">
+
+            <p className="text-gray-600">
+              Apakah Data yang anda tambahkan untuk properti ini sudah tepat?
+            </p>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowConfirm(false);
+                }}
+                className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 cursor-pointer"
+              >
+                Batal
+              </button>
+
+              <button
+                onClick={handleSubmit}
+                className="px-5 py-2 rounded-lg bg-blue-800 hover:bg-blue-700 text-white cursor-pointer"
+              >
+                Ya, Sudah Tepat
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+      {showNotif && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+              <Bookmark className="text-blue-800" size={34} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mt-5">
+              Update Data Telah Berhasil
+            </h2>
+            <button
+              onClick={() => {setShowNotif(false); navigate("/dashboardIntern")}}
+              className="mt-6 w-full h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-semibold cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
     </>
   );

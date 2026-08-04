@@ -52,13 +52,6 @@ function Footer() {
               >
                 Properti Disewa
               </button>
-
-              <button
-                onClick={() => navigate("/question")}
-                className="text-left hover:text-blue-300 transition cursor-pointer"
-              >
-                FAQ
-              </button>
             </div>
           </div>
 

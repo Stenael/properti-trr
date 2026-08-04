@@ -8,7 +8,10 @@ import {
   Pencil,
   FileText,
   BanknoteCheck,
-  Search
+  Search,
+  Home,
+  KeyRound,
+  CircleCheckBig,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NavbarIntern from "./NavbarIntern";
@@ -102,7 +105,6 @@ function DashboardIntern() {
         )
       );
       setShowNotifActive(true);
-
     }
   };
 
@@ -171,21 +173,157 @@ function DashboardIntern() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showNotifActive, setShowNotifActive] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null); 
+
+  const [selectedReactivate, setSelectedReactivate] = useState(null);
+  const [showConfirmActive, setShowConfirmActive] = useState(false);
+  const [showQris, setShowQris] = useState(false);
+  const [qrisData, setQrisData] = useState(null);
+  const [loadingQris, setLoadingQris] = useState(false);
+
+  const handleGenerateQRIS = async () => {
+    try{
+      setLoadingQris(true);
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        "http://localhost:5000/payment/generate-qris",
+        {
+          method:"POST",
+          headers:{
+              "Content-Type":"application/json",
+              Authorization:`Bearer ${token}`
+          },
+          body:JSON.stringify({
+              amount:15000
+          })
+        }
+      );
+
+      const data = await res.json();
+      console.log("Generate QRIS:", data);
+      console.log("HTTP:", res.status);
+      setLoadingQris(false);
+
+      if(!res.ok){
+        alert(data.message);
+        return;
+      }
+      setQrisData(data);
+      setShowConfirmActive(false);
+      setShowQris(true);
+      console.log("Memulai polling");
+      startCheckingPayment(data.partner_ref_no);
+    }catch(err){
+      console.log(err);
+      setLoadingQris(false);
+      alert("Server Error");
+    }
+  }
+
+  const startCheckingPayment = (partner_ref_no)=>{
+    console.log("startCheckingPayment dipanggil");
+    console.log(partner_ref_no);
+
+    const token = localStorage.getItem("token");
+    const interval = setInterval(async()=>{
+      const res = await fetch(
+        `http://localhost:5000/payment/query/${partner_ref_no}`,
+        {
+            headers:{
+                Authorization:`Bearer ${token}`
+            }
+        }
+      );
+      const data = await res.json();
+      console.log(data);
+      console.log(data.responseData.qrisStatus);
+      if(data.responseData?.qrisStatus ==="PAID"){
+        clearInterval(interval);
+        console.log("Pembayaran berhasil");
+        setShowQris(false);
+        await handleReactivate(selectedReactivate.id);
+      }
+    },3000);
+  }
+
+  const totalJual = properties.filter(
+    (item) => item.type === "Dijual" && item.soldStatus === 0
+  ).length;
+
+  const totalSewa = properties.filter(
+    (item) => item.type === "Disewa" && item.soldStatus === 0
+  ).length;
+
+  const totalLaku = properties.filter(
+    (item) => item.soldStatus === 1
+  ).length;
   return (
     <>
       <NavbarIntern />
       <div className="bg-white max-h-full ">
+        <div className="relative bg-blue-900 text-white px-32 py-16 mb-10">
+              <h1 className="text-4xl font-bold">
+                  Properti Saya
+              </h1>
+              <p className="text-blue-100 mt-2">
+                  Kelola seluruh promosi properti Anda dengan mudah.
+              </p>
+              <div className="grid md:grid-cols-3 gap-6 mt-10">
+                <div className="bg-white rounded-2xl p-6 flex items-center gap-5 shadow-lg">
+                  <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center">
+                    <Home className="text-white" size={36}/>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 font-medium">
+                      Dijual
+                    </div>
+                    <div className="text-4xl font-bold text-green-600">
+                      {totalJual}
+                    </div>
+                    <div className="text-gray-500">
+                      Properti
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 flex items-center gap-5 shadow-lg">
+                  <div className="w-20 h-20 rounded-full bg-orange-500 flex items-center justify-center">
+                    <KeyRound className="text-white" size={36}/>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 font-medium">
+                      Disewakan
+                    </div>
+                    <div className="text-4xl font-bold text-orange-500">
+                      {totalSewa}
+                    </div>
+                    <div className="text-gray-500">
+                      Properti
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 flex items-center gap-5 shadow-lg">
+                  <div className="w-20 h-20 rounded-full bg-blue-800 flex items-center justify-center">
+                    <CircleCheckBig className="text-white" size={36}/>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 font-medium">
+                      Sudah Laku
+                    </div>
+                    <div className="text-4xl font-bold text-blue-800">
+                      {totalLaku}
+                    </div>
+                    <div className="text-gray-500">
+                      Properti
+                    </div>
+                  </div>
+                </div>
+            </div>
+        </div>
         <div className="max-w-7xl mx-auto px-8 py-10">
           <div className="flex justify-between items-center mb-10">
            <div className="flex flex-col gap-5">
-            <div>
-              <h1 className="text-3xl font-bold text-blue-800">
-                Properti Saya
-              </h1>
-              <p className="text-gray-500 mt-2">
-                Kelola seluruh promosi properti Anda.
-              </p>
-            </div>
+            
             <div className="flex flex-col lg:flex-row lg:items-center gap-4">
               <div className="flex flex-wrap gap-3">
                 <button
@@ -380,7 +518,10 @@ function DashboardIntern() {
 
                       {item.status === 1 && item.exclusive === 0 && (
                         <button
-                          onClick={() => handleReactivate(item.id)}
+                          onClick={() => {
+                            setSelectedReactivate(item);
+                            setShowConfirmActive(true);
+                          }}
                           className="h-11 rounded-xl bg-green-600 hover:bg-green-700 text-white cursor-pointer"
                         >
                           Aktifkan Kembali
@@ -488,10 +629,43 @@ function DashboardIntern() {
                 </p>
                 <button
                   onClick={() => setShowNotif(false)}
-                  className="mt-6 w-full h-11 rounded-xl bg-green-800 hover:bg-green-700 text-white font-semibold cursor-pointer"
+                  className="mt-6 w-full h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-semibold cursor-pointer"
                 >
                   OK
                 </button>
+              </div>
+            </div>
+          )}
+          {showConfirmActive && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl p-6 w-96 shadow-xl">
+
+                <p className="text-gray-600">
+                  Apakah Anda ingin mengaktifkan kembali promosi properti ini?
+                </p>
+
+                <p className="text-sm text-red-500 mt-3">
+                  Status ini tidak dapat dikembalikan.
+                </p>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    onClick={() => {
+                      setShowConfirmActive(false);
+                    }}
+                    className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 cursor-pointer"
+                  >
+                    Batal
+                  </button>
+
+                  <button
+                      onClick={handleGenerateQRIS}
+                      className="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white"
+                  >
+                      {loadingQris ? "Memproses..." : "Ya, Aktifkan Kembali"}
+                  </button>
+                </div>
+
               </div>
             </div>
           )}
@@ -506,13 +680,39 @@ function DashboardIntern() {
                 </h2>
                 <button
                   onClick={() => setShowNotifActive(false)}
-                  className="mt-6 w-full h-11 rounded-xl bg-green-800 hover:bg-green-700 text-white font-semibold cursor-pointer"
+                  className="mt-6 w-full h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-semibold cursor-pointer"
                 >
                   OK
                 </button>
               </div>
             </div>
           )}
+          {showQris && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl p-8 w-[430px]">
+                <h2 className="text-2xl font-bold text-center">
+                    Pembayaran QRIS
+                </h2>
+                <p className="text-center text-gray-500 mt-2">
+                    Silakan scan QRIS berikut
+                </p>
+                <div className="flex justify-center mt-6">
+                  <img
+                      src={qrisData?.qrImage}
+                      className="w-72"
+                  />  
+                </div>
+                <div className="mt-5 text-center">
+                    <div className="text-xl font-bold text-green-700">
+                        Rp15.000
+                    </div>
+                    <div className="text-sm text-gray-500 mt-2">
+                        Menunggu pembayaran...
+                    </div>
+                </div>
+              </div>
+            </div>
+            )}
         </div>
       </div>
       <Footer/>

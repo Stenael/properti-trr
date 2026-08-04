@@ -17,7 +17,29 @@ app.use('/uploads', express.static('uploads'));
 const multer = require("multer");
 const path = require("path");
 
+const axios = require("axios");
 const fs = require("fs");
+const QRCode = require("qrcode");
+
+const kodeLoket = "IDM202601270915367B9347";
+const apiKey = "50002dd7d79242d884181a3c901dc7ea";
+const clientSecret = "d642740b-1e1b-482c-8e5f-40d2fc18120d";
+
+const merchantId = "936005032250000138";
+const subMerchantId = "25062500000002";
+const storeId = "ID2025414603006";
+
+async function getToken() {
+  const { data } = await axios.post(
+    "https://trr08-api.rukuntetangga.net/qris-loket-grup/get_token.php",
+    {
+        kodeLoket,
+        apiKey,
+        clientSecret
+    }
+  );
+  return data.token;
+}
 app.get("/", (req, res) => {
     res.send("Backend berhasil berjalan!");
 });
@@ -99,11 +121,11 @@ const upload = multer({
 app.post(
   "/promotion",
   authenticateToken,
-  upload.array("images", 6),
+  upload.array("images", 10),
   (req, res) => {
-     if (!req.files || req.files.length > 6) {
+     if (!req.files || req.files.length > 10) {
       return res.status(400).json({
-        message: "Maksimal upload 6 gambar.",
+        message: "Maksimal upload 10 gambar.",
       });
     }
     const {
@@ -186,7 +208,7 @@ app.post(
 app.put(
   "/property/:id",
   authenticateToken,
-  upload.array("images", 6),
+  upload.array("images", 10),
   (req, res) => {
     const {
       name,
@@ -531,6 +553,84 @@ app.get("/exclusive", authenticateToken, (req, res) => {
             res.json(result[0]);
         }
     );
+});
+
+app.post("/payment/generate-qris", authenticateToken, async (req,res)=>{
+  try{
+    const token = await getToken();
+    const partner_ref_no = `PROP${Date.now()}`.slice(0, 20);
+    const amount = Number(2500).toFixed(2);
+    const { data } = await axios.post(
+      "https://trr08-api.rukuntetangga.net/qris-loket-grup/generate_qris.php",
+      {
+          kodeLoket,
+          apiKey,
+          clientSecret,
+          merchantId,
+          subMerchantId,
+          storeId,
+          amount,
+          bankCode:"BMRI",
+          bankAccount:"1400025570020",
+          partner_ref_no
+      },
+      {
+          headers:{
+              Authorization:`Bearer ${token}`
+          }
+      }
+    );
+    console.log(JSON.stringify(data, null, 2));
+    console.log(typeof data);
+    console.log(data.qrContent);
+    const qr = JSON.parse(data.response.body);
+
+    const qrImage = await QRCode.toDataURL(qr.qrContent);
+
+    res.json({
+        qrImage,
+        partner_ref_no
+    });
+  }catch(err){
+    console.log(err.response?.data || err.message);
+    res.status(500).json({
+        message:"Generate QR gagal"
+    });
+  }
+});
+
+app.get("/payment/query/:partner_ref_no", authenticateToken, async (req, res) => {
+  try {
+    const token = await getToken();
+
+    const { data } = await axios.post(
+      "https://trr08-api.rukuntetangga.net/qris-loket-grup/query_qris.php",
+      {
+        kodeLoket,
+        apiKey,
+        clientSecret,
+        partner_ref_no: req.params.partner_ref_no
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    console.log(JSON.stringify(data, null, 2));
+
+    const result = JSON.parse(data.response.body);
+
+    res.json(result);
+
+  } catch (err) {
+    console.log(err.response?.data || err.message);
+
+    res.status(500).json({
+      message: "Query pembayaran gagal"
+    });
+  }
 });
 
 const PORT = 5000;

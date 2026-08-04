@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {ImagePlus, Plus, Trash2, Save, Home, MapPin, Zap, Ruler, FileText, Bed, Bath} from "lucide-react";
+import {ImagePlus, Plus, Trash2, Save, Home, MapPin, Zap, Ruler, FileText, Bed, Bath, Bookmark} from "lucide-react";
 import NavbarIntern from "./NavbarIntern";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
@@ -11,12 +11,11 @@ function Promotion() {
     address: "",
     village: "",
     district: "",
-    building: "",
+    building: "Rumah",
     price: "",
     luasTanah: "",
     luasBangunan: "",
     listrik: "",
-    building:"",
     type: "Dijual",
     kt: "",
     km: "",
@@ -29,6 +28,9 @@ function Promotion() {
   const [villages, setVillages] = useState([]);
   const [districtId, setDistrictId] = useState("");
   const [exclusive, setExclusive] = useState(0);
+
+  const [showNotif, setShowNotif] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   
   const handleChange = (e) => {
     setFormData({
@@ -39,9 +41,9 @@ function Promotion() {
 
   const handleImage = (e) => {
     const files = Array.from(e.target.files);
-    const newImages = [...images, ...files].slice(0, 6);
-    if (images.length + files.length > 6) {
-      alert("Maksimal 6 gambar.");
+    const newImages = [...images, ...files].slice(0, 10);
+    if (images.length + files.length > 10) {
+      alert("Maksimal 10 gambar.");
     }
     setImages(newImages);
   };
@@ -62,42 +64,43 @@ function Promotion() {
     setDeskripsi(temp);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     const token = localStorage.getItem("token");
     const form = new FormData();
 
-    Object.keys(formData).forEach((key) => {
-      form.append(key, formData[key]);
+    Object.keys(formData).forEach((key)=>{
+        form.append(key, formData[key]);
     });
 
-    images.forEach((img) => {
-      form.append("images", img);
+    images.forEach((img)=>{
+        form.append("images", img);
     });
 
     form.append("deskripsi", JSON.stringify(deskripsi));
+    try{
 
-    try {
-      const response = await fetch("http://localhost:5000/promotion", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: form,
-      });
+      const response = await fetch(
+        "http://localhost:5000/promotion",
+        {
+            method:"POST",
+            headers:{
+                Authorization:`Bearer ${token}`
+            },
+            body:form
+        }
+      );
 
       const data = await response.json();
 
-      if (response.ok) {
-        alert(data.message);
-        navigate("/dashboardIntern");
-      } else {
+      if(response.ok){
+        setShowConfirm(false);
+        setShowNotif(true);
+      }else{
         alert(data.message);
       }
-    } catch (err) {
-      console.error(err);
-      alert("Terjadi kesalahan pada server");
+
+    }catch(err){
+        console.log(err);
     }
   };
 
@@ -168,6 +171,75 @@ function Promotion() {
     navigate("/payment");
   };
 
+   const [showQris, setShowQris] = useState(false);
+  const [qrisData, setQrisData] = useState(null);
+  const [loadingQris, setLoadingQris] = useState(false);
+
+  const handleGenerateQRIS = async () => {
+    try{
+      setLoadingQris(true);
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        "http://localhost:5000/payment/generate-qris",
+        {
+          method:"POST",
+          headers:{
+              "Content-Type":"application/json",
+              Authorization:`Bearer ${token}`
+          },
+          body:JSON.stringify({
+              amount:15000
+          })
+        }
+      );
+
+      const data = await res.json();
+      console.log("Generate QRIS:", data);
+      console.log("HTTP:", res.status);
+      setLoadingQris(false);
+
+      if(!res.ok){
+        alert(data.message);
+        return;
+      }
+      setQrisData(data);
+      setShowConfirm(false);
+      setShowQris(true);
+      console.log("Memulai polling");
+      startCheckingPayment(data.partner_ref_no);
+    }catch(err){
+      console.log(err);
+      setLoadingQris(false);
+      alert("Server Error");
+    }
+  }
+
+  const startCheckingPayment = (partner_ref_no)=>{
+    console.log("startCheckingPayment dipanggil");
+    console.log(partner_ref_no);
+
+    const token = localStorage.getItem("token");
+    const interval = setInterval(async()=>{
+      const res = await fetch(
+        `http://localhost:5000/payment/query/${partner_ref_no}`,
+        {
+            headers:{
+                Authorization:`Bearer ${token}`
+            }
+        }
+      );
+      const data = await res.json();
+      console.log(data);
+      console.log(data.responseData.qrisStatus);
+      if(data.responseData?.qrisStatus ==="PAID"){
+        clearInterval(interval);
+        console.log("Pembayaran berhasil");
+        setShowQris(false);
+        await handleSubmit();
+      }
+    },3000);
+  }
+
   return (
     <>
       <NavbarIntern />
@@ -176,7 +248,10 @@ function Promotion() {
           <h1 className="text-4xl font-bold text-blue-800 mb-10">
             Tambah Properti Baru
           </h1>
-          <form onSubmit={handleSubmit} className="space-y-10">
+          <form onSubmit={(e)=>{
+                e.preventDefault();
+                setShowConfirm(true);
+            }} className="space-y-10">
             <div className="border-b border-slate-300 pb-8">
               <h2 className="text-xl font-semibold mb-6">
                 Informasi Properti
@@ -277,12 +352,13 @@ function Promotion() {
                   </label>
                   <select
                     name="building"
+                    value={formData.building}
                     onChange={handleChange}
                     className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
                   >
-                    <option>Rumah</option>
-                    <option>Ruko</option>
-                    <option>Tanah</option>
+                    <option value="Rumah">Rumah</option>
+                    <option value="Ruko">Ruko</option>
+                    <option value="Tanah">Tanah</option>
                   </select>
                 </div>
                 <div>
@@ -291,11 +367,12 @@ function Promotion() {
                   </label>
                   <select
                     name="type"
+                    value={formData.type}
                     onChange={handleChange}
                     className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
                   >
-                    <option>Dijual</option>
-                    <option>Disewa</option>
+                    <option value="Dijual">Dijual</option>
+                    <option value="Disewa">Disewa</option>
                   </select>
                 </div>
               </div>
@@ -437,7 +514,7 @@ function Promotion() {
                       onChange={handleImage}
                     />
                     <p className="text-xs text-red-500 mt-2">
-                      Maksimal 6 gambar
+                      Maksimal 10 gambar
                     </p>
                   </label>
                 </div>
@@ -502,27 +579,115 @@ function Promotion() {
             </div>
 
             <div className="flex justify-end pt-4">
-              {/* {exclusive === 1 ? ( */}
-                <button
-                  type="submit"
-                  className="bg-blue-800 hover:bg-blue-900 text-white px-8 h-12 rounded-xl flex items-center gap-3 font-semibold shadow-lg"
-                >
-                  <Save size={18} />
-                  Simpan Properti
-                </button>
-              {/* ) : ( */}
-                {/* <button
-                  type="button"
-                  onClick={handlePayment}
-                  className="bg-green-600 hover:bg-green-700 text-white px-8 h-12 rounded-xl flex items-center gap-3 font-semibold shadow-lg"
-                >
-                  <Save size={18} />
-                  Bayar & Promosikan
-                </button>
-              )} */}
+              <button
+                type="submit"
+                className={`px-8 h-12 rounded-xl flex items-center gap-3 font-semibold text-white shadow-lg transition-all duration-300 cursor-pointer
+                ${
+                    exclusive===1
+                    ? "bg-blue-800 hover:bg-blue-900"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+            >
+                <Save size={18}/>
+                {exclusive===1
+                    ? "Simpan Properti"
+                    : "Bayar & Promosikan"}
+            </button>
             </div>
           </form>
         </div>
+        {showConfirm && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl p-6 w-96 shadow-xl">
+
+                <h2 className="text-xl font-bold mb-3">
+                  Apakah data yang anda masukkan sudah tepat?
+                </h2>
+
+
+                <p className="text-sm text-red-500 mt-3">
+                  Status ini tidak dapat dikembalikan.
+                </p>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    onClick={() => {
+                      setShowConfirm(false);
+                    }}
+                    className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 cursor-pointer"
+                  >
+                    Batal
+                  </button>
+
+                 <button
+                    type="button"
+                    onClick={() => {
+                        if (exclusive === 1) {
+                            handleSubmit();
+                        } else {
+                            handleGenerateQRIS();
+                        }
+                    }}
+                    className={`px-6 py-2 rounded-lg text-white font-semibold transition-all duration-300 cursor-pointer
+                    ${
+                        exclusive === 1
+                            ? "bg-blue-700 hover:bg-blue-800"
+                            : "bg-green-600 hover:bg-green-700"
+                    }`}
+                >
+                    {exclusive === 1 ? "Ya, Simpan" : "Bayar"}
+                </button>
+                </div>
+
+              </div>
+            </div>
+          )}
+          {showNotif && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
+                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+                  <Bookmark className="text-blue-800" size={34} />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800 mt-5">
+                  Data Berhasil Disimpan
+                </h2>
+                <button
+                  onClick={() =>{
+                    setShowNotif(false);
+                    navigate("/dashboardIntern");} }
+                  className="mt-6 w-full h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-semibold cursor-pointer"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          )}
+          {showQris && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl p-8 w-[430px]">
+                <h2 className="text-2xl font-bold text-center">
+                    Pembayaran QRIS
+                </h2>
+                <p className="text-center text-gray-500 mt-2">
+                    Silakan scan QRIS berikut
+                </p>
+                <div className="flex justify-center mt-6">
+                  <img
+                      src={qrisData?.qrImage}
+                      className="w-72"
+                  />
+                </div>
+                <div className="mt-5 text-center">
+                    <div className="text-xl font-bold text-green-700">
+                        Rp15.000
+                    </div>
+                    <div className="text-sm text-gray-500 mt-2">
+                        Menunggu pembayaran...
+                    </div>
+                </div>
+              </div>
+            </div>
+            )}
       </div>
       <Footer/>
     </>

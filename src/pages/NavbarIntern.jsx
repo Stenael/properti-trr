@@ -47,13 +47,6 @@ function NavbarIntern() {
           </button>
 
           <button
-            onClick={() => navigate("/profile")}
-            className="font-medium text-gray-700 hover:text-blue-500 transition cursor-pointer"
-          >
-            Profil
-          </button>
-
-          <button
             onClick={handleLogout}
             className="text-red-600 font-semibold hover:text-red-500 cursor-pointer"
           >
