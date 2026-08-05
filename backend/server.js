@@ -558,21 +558,16 @@ app.get("/exclusive", authenticateToken, (req, res) => {
 app.post("/payment/generate-qris", authenticateToken, async (req,res)=>{
   try{
     const token = await getToken();
-    const partner_ref_no = `PROP${Date.now()}`.slice(0, 20);
+    const random = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const partner_ref_no = `PROP${Date.now()}${random}`.slice(0, 25);
     const amount = Number(2500).toFixed(2);
     const { data } = await axios.post(
       "https://trr08-api.rukuntetangga.net/qris-loket-grup/generate_qris.php",
       {
-          kodeLoket,
-          apiKey,
-          clientSecret,
-          merchantId,
-          subMerchantId,
-          storeId,
           amount,
-          bankCode:"BMRI",
-          bankAccount:"1400025570020",
-          partner_ref_no
+          partner_ref_no,
+          bankCode: "BMRI",
+          bankAccount: "1400025570020"
       },
       {
           headers:{
@@ -581,6 +576,8 @@ app.post("/payment/generate-qris", authenticateToken, async (req,res)=>{
       }
     );
     console.log(JSON.stringify(data, null, 2));
+    console.log(partner_ref_no);
+    console.log(partner_ref_no.length);
     console.log(typeof data);
     console.log(data.qrContent);
     const qr = JSON.parse(data.response.body);
@@ -631,6 +628,122 @@ app.get("/payment/query/:partner_ref_no", authenticateToken, async (req, res) =>
       message: "Query pembayaran gagal"
     });
   }
+});
+
+app.get("/profile", authenticateToken, (req, res) => {
+  db.query(
+    `
+    SELECT
+      id,
+      username,
+      name,
+      city,
+      phone_number,
+      email,
+      exclusive
+    FROM akuns
+    WHERE id = ?
+    `,
+    [req.userId],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          message: "Server Error",
+        });
+      }
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          message: "User tidak ditemukan",
+        });
+      }
+
+      res.json(result[0]);
+    }
+  );
+});
+
+app.put("/profile", authenticateToken, (req, res) => {
+  const {
+    name,
+    phone_number,
+    email,
+    city
+  } = req.body;
+
+  db.query(
+    `
+    UPDATE akuns
+    SET
+      name=?,
+      phone_number=?,
+      email=?,
+      city=?
+    WHERE id=?
+    `,
+    [
+      name,
+      phone_number,
+      email,
+      city,
+      req.userId
+    ],
+    (err) => {
+      if(err){
+        console.log(err);
+
+        return res.status(500).json({
+          message:"Gagal mengupdate profile"
+        });
+      }
+
+      res.json({
+        message:"Profile berhasil diperbarui"
+      });
+    }
+  );
+});
+
+app.post("/profile/check-password", authenticateToken, (req, res) => {
+
+  db.query(
+    "SELECT password FROM akuns WHERE id=?",
+    [req.userId],
+    async (err, result) => {
+
+      if (err) return res.sendStatus(500);
+
+      const match = await bcrypt.compare(
+        req.body.password,
+        result[0].password
+      );
+
+      if (!match) {
+        return res.status(400).json({
+            message: "Password lama salah."
+        });
+      }
+
+      res.json({
+        message: "OK"
+      });
+    }
+  );
+});
+
+app.put("/profile/change-password", authenticateToken, async (req, res) => {
+  const hash = await bcrypt.hash(req.body.password, 10);
+  db.query(
+    "UPDATE akuns SET password=? WHERE id=?",
+    [hash, req.userId],
+    (err) => {
+      if (err) return res.sendStatus(500);
+
+      res.json({
+        message: "Password berhasil diubah."
+      });
+    }
+  );
 });
 
 const PORT = 5000;

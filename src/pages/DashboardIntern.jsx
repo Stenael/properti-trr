@@ -260,17 +260,17 @@ function DashboardIntern() {
     <>
       <NavbarIntern />
       <div className="bg-white max-h-full ">
-        <div className="relative bg-blue-900 text-white px-32 py-16 mb-10">
-              <h1 className="text-4xl font-bold">
+        <div className="relative bg-white text-blue-800 px-5 sm:px-8 md:px-16 lg:px-32 py-10 md:py-16">
+              <h1 className="text-3xl md:text-4xl font-bold">
                   Properti Saya
               </h1>
-              <p className="text-blue-100 mt-2">
+              <p className="text-gray-800 mt-2">
                   Kelola seluruh promosi properti Anda dengan mudah.
               </p>
-              <div className="grid md:grid-cols-3 gap-6 mt-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
                 <div className="bg-white rounded-2xl p-6 flex items-center gap-5 shadow-lg">
-                  <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center">
-                    <Home className="text-white" size={36}/>
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-green-500 flex items-center justify-center">
+                    <Home size={30} className="text-white md:w-9 md:h-9"/>
                   </div>
                   <div>
                     <div className="text-gray-500 font-medium">
@@ -286,8 +286,8 @@ function DashboardIntern() {
                 </div>
 
                 <div className="bg-white rounded-2xl p-6 flex items-center gap-5 shadow-lg">
-                  <div className="w-20 h-20 rounded-full bg-orange-500 flex items-center justify-center">
-                    <KeyRound className="text-white" size={36}/>
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-orange-500 flex items-center justify-center">
+                    <KeyRound className="text-white md:w-9 md:h-9" size={30} />
                   </div>
                   <div>
                     <div className="text-gray-500 font-medium">
@@ -303,8 +303,8 @@ function DashboardIntern() {
                 </div>
 
                 <div className="bg-white rounded-2xl p-6 flex items-center gap-5 shadow-lg">
-                  <div className="w-20 h-20 rounded-full bg-blue-800 flex items-center justify-center">
-                    <CircleCheckBig className="text-white" size={36}/>
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-blue-800 flex items-center justify-center">
+                    <CircleCheckBig className="text-white md:w-9 md:h-9" size={30}/>
                   </div>
                   <div>
                     <div className="text-gray-500 font-medium">
@@ -321,11 +321,11 @@ function DashboardIntern() {
             </div>
         </div>
         <div className="max-w-7xl mx-auto px-8 py-10">
-          <div className="flex justify-between items-center mb-10">
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6 mb-10">
            <div className="flex flex-col gap-5">
             
             <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
                 <button
                   onClick={() => {
                     setStatusFilter("all");
@@ -393,7 +393,7 @@ function DashboardIntern() {
               onClick={() => {
                 setStatusFilter("sold");
                 setCurrentPage(1)}}
-              className={`px-6 h-12 rounded-xl cursor-pointer ${
+              className={`w-full sm:w-auto px-6 h-12 rounded-xl cursor-pointer ${
                 statusFilter === "sold"
                   ? "bg-green-600 text-white"
                   : "bg-green-600 text-white hover:bg-green-800"

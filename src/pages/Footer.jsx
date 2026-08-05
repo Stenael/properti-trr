@@ -69,12 +69,12 @@ function Footer() {
 
               <div className="flex gap-3">
                 <Phone size={20} />
-                <span>+62 81111111111111</span>
+                <span>+62 851-1766-8959</span>
               </div>
 
               <div className="flex gap-3">
                 <Mail size={20} />
-                <span>info@ininama  .com</span>
+                <span>cvtrr2025@gmail.com</span>
               </div>
 
             </div>
