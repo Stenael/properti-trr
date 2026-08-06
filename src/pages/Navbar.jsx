@@ -14,7 +14,7 @@ function Navbar() {
       return;
     }
 
-    const res = await fetch("http://localhost:5000/checklogin", {
+    const res = await fetch("http://192.168.101.37:5000/checklogin", {
       headers: {
         Authorization: `Bearer ${token}`,
       },

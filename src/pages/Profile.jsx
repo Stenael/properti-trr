@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import NavbarIntern from "./NavbarIntern";
-import { User, Mail, Phone, MapPin, Pencil, Save } from "lucide-react";
+import { User, Mail, Phone, MapPin, Pencil, Save, Bookmark } from "lucide-react";
 import Footer from "./Footer";
 
 function Profile() {
@@ -9,6 +9,8 @@ function Profile() {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNotif, setShowNotif] = useState(false);
+  const [showNotifPassword, setShowNotifPassword] = useState(false);
 
   const [edit,setEdit]=useState(false);
 
@@ -24,7 +26,7 @@ function Profile() {
   useEffect(()=>{
     const token=localStorage.getItem("token");
 
-    fetch("http://localhost:5000/profile",{
+    fetch("http://192.168.101.37:5000/profile",{
         headers:{
             Authorization:`Bearer ${token}`
         }
@@ -42,25 +44,28 @@ function Profile() {
 
   const handleSave=async()=>{
     const token=localStorage.getItem("token");
-    const res=await fetch("http://localhost:5000/profile",{
-        method:"PUT",
-        headers:{
-            "Content-Type":"application/json",
-            Authorization:`Bearer ${token}`
-        },
-        body:JSON.stringify(formData)
+    const res=await fetch("http://192.168.101.37:5000/profile",{
+      method:"PUT",
+      headers:{
+          "Content-Type":"application/json",
+          Authorization:`Bearer ${token}`
+      },
+      body:JSON.stringify(formData)
     });
 
     const data=await res.json();
-    alert(data.message);
+    
     if(res.ok){
-        setEdit(false);
+      setShowNotif(true);
+      setEdit(false);
+    } else {
+      alert(data.message);
     }
   };
 
   const checkOldPassword = async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch("http://localhost:5000/profile/check-password",{
+    const res = await fetch("http://192.168.101.37:5000/profile/check-password",{
         method:"POST",
         headers:{
             "Content-Type":"application/json",
@@ -83,14 +88,12 @@ function Profile() {
   };
 
   const changePassword = async () => {
-
     if(newPassword !== confirmPassword){
         return alert("Konfirmasi password tidak sama.");
     }
 
     const token = localStorage.getItem("token");
-
-    const res = await fetch("http://localhost:5000/profile/change-password",{
+    const res = await fetch("http://192.168.101.37:5000/profile/change-password",{
         method:"PUT",
         headers:{
             "Content-Type":"application/json",
@@ -102,14 +105,14 @@ function Profile() {
     });
 
     const data = await res.json();
-
-    alert(data.message);
-
+    
     if(res.ok){
-
+        setShowNotifPassword(true);
         setShowNewPassword(false);
         setNewPassword("");
         setConfirmPassword("");
+    } else {
+      alert(data.message);
     }
   };
 
@@ -316,7 +319,7 @@ function Profile() {
               </button>
               <button
                   onClick={changePassword}
-                  className="px-5 h-11 bg-green-600 text-white rounded-xl cursor-pointer"
+                  className="px-5 h-11 bg-blue-800 text-white rounded-xl cursor-pointer"
               >
                   Simpan
               </button>
@@ -324,7 +327,42 @@ function Profile() {
         </div>
       </div>
       )}
-      
+      {showNotifPassword && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+              <Bookmark className="text-blue-800" size={34} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mt-5">
+              Ubah Password Telah Berhasil
+            </h2>
+            <button
+              onClick={() => setShowNotifPassword(false)}
+              className="mt-6 w-full h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-semibold cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+      {showNotif && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+              <Bookmark className="text-blue-800" size={34} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mt-5">
+              Ubah Data Telah Berhasil
+            </h2>
+            <button
+              onClick={() => setShowNotif(false)}
+              className="mt-6 w-full h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-semibold cursor-pointer"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import {MapPin, BedDouble, Bath, LandPlot, House, Zap, FileText, User, MessageCircle} from "lucide-react";
+import {MapPin, BedDouble, Bath, LandPlot, House, Zap, FileText, User, MessageCircle, ArrowLeft} from "lucide-react";
 
 function DetailPublic() {
   const { id } = useParams();
   const [property, setProperty] = useState(null);
   const [mainImage, setMainImage] = useState("");
   const [showImage, setShowImage] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`http://localhost:5000/property/${id}`)
+    fetch(`http://192.168.101.37:5000/property/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setProperty(data);
@@ -37,19 +38,28 @@ function DetailPublic() {
     <>
       <Navbar />
       <div className="max-w-7xl mx-auto py-10 px-6">
-        <div className="flex gap-4">
-          <div className="flex-1">
+        <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-blue-800 hover:text-blue-600 font-medium mb-5 cursor-pointer transition"
+          >
+            <ArrowLeft size={20} />
+            Kembali
+          </button>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 order-1">
             <img
-              src={`http://localhost:5000/uploads/${mainImage}`}
+              src={`http://192.168.101.37:5000/uploads/${mainImage}`}
               onClick={() => setShowImage(true)}
-              className="w-full h-[600px] rounded-2xl object-cover shadow cursor-pointer"
+              className="w-full h-[280px] md:h-[600px] rounded-2xl object-cover shadow cursor-pointer"
             />
           </div>
-          <div className="w-32 flex flex-col gap-3 overflow-y-auto max-h-[600px]">
+          {property.images.length > 1 && (
+            <div className="order-1 w-full md:w-32 flex flex-row md:flex-col gap-3 overflow-y-auto max-h-[600px]">
             {property.images.map((img, index) => (
               <img
                 key={index}
-                src={`http://localhost:5000/uploads/${img}`}
+                src={`http://192.168.101.37:5000/uploads/${img}`}
                 onClick={() => setMainImage(img)}
                 className={`h-28 w-28 rounded-xl object-cover cursor-pointer border-4 ${
                   mainImage === img
@@ -59,6 +69,7 @@ function DetailPublic() {
               />
             ))}
           </div>
+          )}
         </div>
     
         <div className="grid lg:grid-cols-3 gap-10 mt-10">
@@ -194,7 +205,7 @@ function DetailPublic() {
             className="fixed inset-0 bg-black/80 flex justify-center items-center z-50"
         >
             <img
-                src={`http://localhost:5000/uploads/${mainImage}`}
+                src={`http://192.168.101.37:5000/uploads/${mainImage}`}
                 className="max-h-[90vh] max-w-[90vw] rounded-xl"
             />
         </div>

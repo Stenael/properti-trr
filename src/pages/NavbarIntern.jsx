@@ -8,7 +8,7 @@ function NavbarIntern() {
 
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:5000/logout", {
+      await fetch("http://192.168.101.37:5000/logout", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -35,21 +35,21 @@ function NavbarIntern() {
         <div className="hidden md:flex flex-1 justify-center items-center gap-8">
           <button
             onClick={() => navigate("/")}
-            className="font-medium hover:text-blue-500 transition"
+            className="font-medium hover:text-blue-500 transition cursor-pointer"
           >
             Beranda
           </button>
 
           <button
             onClick={() => navigate("/dashboardIntern")}
-            className="font-medium hover:text-blue-500 transition"
+            className="font-medium hover:text-blue-500 transition cursor-pointer"
           >
             Properti
           </button>
 
           <button
             onClick={() => navigate("/profile")}
-            className="font-medium hover:text-blue-500 transition"
+            className="font-medium hover:text-blue-500 transition cursor-pointer"
           >
             Profil
           </button>
@@ -59,7 +59,7 @@ function NavbarIntern() {
         <div className="hidden md:flex flex-1 justify-end">
           <button
             onClick={handleLogout}
-            className="text-red-600 font-semibold hover:text-red-500"
+            className="text-red-600 font-semibold hover:text-red-500 cursor-pointer"
           >
             Logout
           </button>

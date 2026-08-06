@@ -12,6 +12,7 @@ import {
   Home,
   KeyRound,
   CircleCheckBig,
+  Trash2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NavbarIntern from "./NavbarIntern";
@@ -26,34 +27,38 @@ function DashboardIntern() {
   const propertiesPerPage = 9;
 
   useEffect(() => {
+    fetchProperties();
+    const pending=
+    JSON.parse(localStorage.getItem("pendingPayment"));
+
+    if(!pending) return;
+
+    startCheckingPayment(pending.partner_ref_no);
+  }, []);
+
+  const fetchProperties = async () => {
     const token = localStorage.getItem("token");
 
-    fetch("http://localhost:5000/properties", {
+    const res = await fetch("http://192.168.101.37:5000/properties", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    })
-      .then(async (res) => {
-        if (res.status === 403 || res.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login");
-          return null;
-        }
+    });
 
-        return res.json();
-      })
-      .then((data) => {
+    if (res.status === 401 || res.status === 403) {
+      localStorage.removeItem("token");
+      navigate("/login");
+      return;
+    }
 
-        if (data.length > 0) {
-        }
-        if (data) {
-          setProperties(data);
-          if (data.length > 0) {
-            setExclusive(data[0].exclusive);
-          }
-        }
-      });
-  }, []);
+    const data = await res.json();
+
+    setProperties(data);
+
+    if (data.length > 0) {
+      setExclusive(data[0].exclusive);
+    }
+  };
 
   const filteredProperties = properties.filter((item) => {
     let matchStatus = true;
@@ -83,7 +88,7 @@ function DashboardIntern() {
     const token = localStorage.getItem("token");
 
     const res = await fetch(
-      `http://localhost:5000/properties/${id}/reactivate`,
+      `http://192.168.101.37:5000/properties/${id}/reactivate`,
       {
         method: "PUT",
         headers: {
@@ -114,7 +119,7 @@ function DashboardIntern() {
     const token = localStorage.getItem("token");
 
     const res = await fetch(
-      `http://localhost:5000/properties/${selectedProperty.id}/sold`,
+      `http://192.168.101.37:5000/properties/${selectedProperty.id}/sold`,
       {
         method: "PUT",
         headers: {
@@ -173,6 +178,11 @@ function DashboardIntern() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showNotifActive, setShowNotifActive] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null); 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedDelete, setSelectedDelete] = useState(null);
+
+  const [showDeleteNotif, setShowDeleteNotif] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState("");
 
   const [selectedReactivate, setSelectedReactivate] = useState(null);
   const [showConfirmActive, setShowConfirmActive] = useState(false);
@@ -185,7 +195,7 @@ function DashboardIntern() {
       setLoadingQris(true);
       const token = localStorage.getItem("token");
       const res = await fetch(
-        "http://localhost:5000/payment/generate-qris",
+        "http://192.168.101.37:5000/payment/generate-qris",
         {
           method:"POST",
           headers:{
@@ -193,24 +203,32 @@ function DashboardIntern() {
               Authorization:`Bearer ${token}`
           },
           body:JSON.stringify({
-              amount:15000
+              amount:2500,
+              propertyId: selectedReactivate.id
           })
         }
       );
 
       const data = await res.json();
-      console.log("Generate QRIS:", data);
-      console.log("HTTP:", res.status);
+      // console.log("Generate QRIS:", data);
+      // console.log("HTTP:", res.status);
       setLoadingQris(false);
 
       if(!res.ok){
         alert(data.message);
         return;
       }
+      localStorage.setItem(
+          "pendingPayment",
+          JSON.stringify({
+              partner_ref_no:data.partner_ref_no,
+              propertyId:selectedReactivate.id
+          })
+      );
       setQrisData(data);
       setShowConfirmActive(false);
       setShowQris(true);
-      console.log("Memulai polling");
+      // console.log("Memulai polling");
       startCheckingPayment(data.partner_ref_no);
     }catch(err){
       console.log(err);
@@ -220,13 +238,13 @@ function DashboardIntern() {
   }
 
   const startCheckingPayment = (partner_ref_no)=>{
-    console.log("startCheckingPayment dipanggil");
+    // console.log("startCheckingPayment dipanggil");
     console.log(partner_ref_no);
 
     const token = localStorage.getItem("token");
     const interval = setInterval(async()=>{
       const res = await fetch(
-        `http://localhost:5000/payment/query/${partner_ref_no}`,
+        `http://192.168.101.37:5000/payment/query/${partner_ref_no}`,
         {
             headers:{
                 Authorization:`Bearer ${token}`
@@ -234,13 +252,15 @@ function DashboardIntern() {
         }
       );
       const data = await res.json();
-      console.log(data);
-      console.log(data.responseData.qrisStatus);
+      // console.log(data);
+      // console.log(data.responseData.qrisStatus);
       if(data.responseData?.qrisStatus ==="PAID"){
         clearInterval(interval);
-        console.log("Pembayaran berhasil");
+        localStorage.removeItem("pendingPayment");
+        // console.log("Pembayaran berhasil");
         setShowQris(false);
-        await handleReactivate(selectedReactivate.id);
+        setShowNotifActive(true);
+        await fetchProperties();
       }
     },3000);
   }
@@ -256,6 +276,42 @@ function DashboardIntern() {
   const totalLaku = properties.filter(
     (item) => item.soldStatus === 1
   ).length;
+
+  const handleDelete = async () => {
+    if (!selectedDelete) return;
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(
+        `http://192.168.101.37:5000/properties/${selectedDelete.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setProperties((prev) =>
+          prev.filter((item) => item.id !== selectedDelete.id)
+        );
+
+        setShowDeleteConfirm(false);
+        setSelectedDelete(null);
+
+        setDeleteMessage(data.message);
+        setShowDeleteNotif(true);
+      } else {
+        alert(data.message);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
   return (
     <>
       <NavbarIntern />
@@ -429,7 +485,7 @@ function DashboardIntern() {
                 className="bg-white rounded-2xl shadow hover:shadow-xl duration-300 overflow-hidden"
               >
                 <img
-                  src={`http://localhost:5000/uploads/${item.images[0]}`}
+                  src={`http://192.168.101.37:5000/uploads/${item.images[0]}`}
                   className="w-full h-60 object-cover"
                   alt=""
                 />
@@ -440,15 +496,26 @@ function DashboardIntern() {
                       {item.name}
                     </h2>
 
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm text-white ${
-                        item.type === "Dijual"
-                          ? "bg-green-600"
-                          : "bg-orange-500"
-                      }`}
-                    >
-                      {item.type}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm text-white ${
+                          item.type === "Dijual"
+                            ? "bg-green-600"
+                            : "bg-orange-500"
+                        }`}
+                      >
+                        {item.type}
+                      </span>
+                      <button
+                          onClick={() => {
+                              setSelectedDelete(item);
+                              setShowDeleteConfirm(true);
+                          }}
+                          className="w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition cursor-pointer"
+                      >
+                          <Trash2 size={16}/>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2 text-gray-500 mt-3 text-xs">
@@ -712,6 +779,75 @@ function DashboardIntern() {
                 </div>
               </div>
             </div>
+            )}
+            {showDeleteConfirm && (
+              <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                <div className="bg-white rounded-2xl p-6 w-96 shadow-xl">
+
+                  <h2 className="text-xl font-bold mb-3">
+                    Hapus Properti
+                  </h2>
+
+                  <p>
+                    Yakin ingin menghapus properti
+                    <span className="font-semibold">
+                      {" "}{selectedDelete?.name}
+                    </span>?
+                  </p>
+
+                  <p className="text-red-500 text-sm mt-3">
+                    Data yang sudah dihapus tidak dapat dikembalikan.
+                  </p>
+
+                  <div className="flex justify-end gap-3 mt-6">
+
+                    <button
+                      onClick={()=>{
+                        setShowDeleteConfirm(false);
+                        setSelectedDelete(null);
+                      }}
+                      className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 cursor-pointer"
+                    >
+                      Batal
+                    </button>
+
+                    <button
+                      onClick={handleDelete}
+                      className="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white cursor-pointer"
+                    >
+                      Ya, Hapus
+                    </button>
+
+                  </div>
+
+                </div>
+              </div>
+            )}
+            {showDeleteNotif && (
+              <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+                <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
+
+                  <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto">
+                    <Trash2 className="text-red-600" size={32}/>
+                  </div>
+
+                  <h2 className="text-2xl font-bold mt-5">
+                    Berhasil
+                  </h2>
+
+                  <p className="mt-3 text-gray-600">
+                    {deleteMessage}
+                  </p>
+
+                  <button
+                    onClick={()=>setShowDeleteNotif(false)}
+                    className="mt-6 w-full h-11 rounded-xl bg-blue-800 hover:bg-blue-900 text-white cursor-pointer"
+                  >
+                    OK
+                  </button>
+
+                </div>
+              </div>
             )}
         </div>
       </div>

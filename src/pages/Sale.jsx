@@ -25,7 +25,7 @@ function Sale() {
   };
 
   useEffect(() => {
-    fetch("http://localhost:5000/properties/sale")
+    fetch("http://192.168.101.37:5000/properties/sale")
       .then((res) => res.json())
       .then((data) => setProperties(data))
       .catch(console.error);
@@ -116,7 +116,7 @@ function Sale() {
           Properti Dijual
         </h1>
         <p className="text-gray-500 mb-8">
-          Temukan rumah impian Anda.
+          Temukan properti impian Anda.
         </p>
 
         <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8">
@@ -127,7 +127,7 @@ function Sale() {
               onClick={() => navigate(`/property/${property.id}`)}
             >
               <div className="relative">
-                <img src={`http://localhost:5000/uploads/${
+                <img src={`http://192.168.101.37:5000/uploads/${
                     property.images[currentImage[property.id] || 0]
                   }`}
                   alt={property.name}

@@ -12,10 +12,12 @@ import DetailPublic from '../pages/DetailPublic'
 import Edit from '../pages/Edit'
 import PublicRoute from '../routes/PublicRoutes'
 import PrivateRoute from '../routes/PrivateRoutes'
+import ScrollToTop from '../pages/ScrollToTop'
 
 function MainMenu() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<DashboardPublic />} />
         <Route

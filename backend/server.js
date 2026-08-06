@@ -1,6 +1,19 @@
 const express = require("express");
 const cors = require("cors");
 const db = require("./db");
+
+const query = (sql, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.query(sql, params, (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+};
+
 const app = express();
 
 app.use(cors());
@@ -204,6 +217,47 @@ app.post(
     );
   }
 );
+
+app.delete("/properties/:id", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [rows] = await db.promise().query(
+      "SELECT images FROM properties WHERE id=? AND userId=?",
+      [id, req.userId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        message: "Properti tidak ditemukan",
+      });
+    }
+    const images = JSON.parse(rows[0].images);
+
+    images.forEach((image) => {
+      const imagePath = path.join(__dirname, "uploads", image);
+
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    });
+
+    await db.promise().query(
+      "DELETE FROM properties WHERE id=? AND userId=?",
+      [id, req.userId]
+    );
+
+    res.json({
+      message: "Properti berhasil dihapus",
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
+});
 
 app.put(
   "/property/:id",
@@ -557,14 +611,15 @@ app.get("/exclusive", authenticateToken, (req, res) => {
 
 app.post("/payment/generate-qris", authenticateToken, async (req,res)=>{
   try{
+    const { amount, propertyId } = req.body;
     const token = await getToken();
     const random = Math.random().toString(36).substring(2, 10).toUpperCase();
     const partner_ref_no = `PROP${Date.now()}${random}`.slice(0, 25);
-    const amount = Number(2500).toFixed(2);
+    const paymentAmount = Number(amount).toFixed(2);
     const { data } = await axios.post(
       "https://trr08-api.rukuntetangga.net/qris-loket-grup/generate_qris.php",
       {
-          amount,
+          amount: paymentAmount,
           partner_ref_no,
           bankCode: "BMRI",
           bankAccount: "1400025570020"
@@ -575,6 +630,19 @@ app.post("/payment/generate-qris", authenticateToken, async (req,res)=>{
           }
       }
     );
+    await query(
+    `
+    INSERT INTO payments
+    (user_id, property_id, partner_ref_no, amount, status)
+    VALUES (?,?,?,?,?)
+    `,
+    [
+        req.userId,
+        propertyId,
+        partner_ref_no,
+        amount,
+        "PENDING"
+    ]);
     console.log(JSON.stringify(data, null, 2));
     console.log(partner_ref_no);
     console.log(partner_ref_no.length);
@@ -619,6 +687,32 @@ app.get("/payment/query/:partner_ref_no", authenticateToken, async (req, res) =>
 
     const result = JSON.parse(data.response.body);
 
+    if(result.responseData?.qrisStatus === "PAID"){
+
+    await query(
+      `
+      UPDATE payments
+      SET
+          status='PAID'
+      WHERE partner_ref_no=?
+      `,
+      [req.params.partner_ref_no]);
+
+      await query(
+      `
+      UPDATE properties
+      SET
+          created_at=NOW(),
+          status=0
+      WHERE id=(
+          SELECT property_id
+          FROM payments
+          WHERE partner_ref_no=?
+      )
+      `,
+      [req.params.partner_ref_no]);
+    }
+
     res.json(result);
 
   } catch (err) {
@@ -628,6 +722,36 @@ app.get("/payment/query/:partner_ref_no", authenticateToken, async (req, res) =>
       message: "Query pembayaran gagal"
     });
   }
+});
+
+app.post("/payment/callback", async(req,res)=>{
+  const {
+      partner_ref_no,
+      qrisStatus
+  } = req.body;
+
+  if(qrisStatus==="PAID"){
+    await query(
+    `
+    UPDATE payments
+    SET status='PAID'
+    WHERE partner_ref_no=?
+    `,
+    [partner_ref_no]);
+
+    await query(
+    `
+    UPDATE properties
+    SET status=0
+    WHERE id=(
+        SELECT property_id
+        FROM payments
+        WHERE partner_ref_no=?
+    )
+    `,
+    [partner_ref_no]);
+  }
+  res.sendStatus(200);
 });
 
 app.get("/profile", authenticateToken, (req, res) => {
@@ -748,6 +872,6 @@ app.put("/profile/change-password", authenticateToken, async (req, res) => {
 
 const PORT = 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server berjalan di http://localhost:${PORT}`);
 });

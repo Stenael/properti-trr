@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
-import {ImagePlus, Plus, Trash2, Save, Home, MapPin, Zap, Ruler, FileText, Bed, Bath, Bookmark} from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import {ImagePlus, Plus, Trash2, Save, Home, MapPin, Zap, Ruler, FileText, Bed, Bath, Bookmark, ArrowLeft} from "lucide-react";
 import NavbarIntern from "./NavbarIntern";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
 
 function Promotion() {
+  const intervalRef = useRef(null);
+  const isSubmittingRef = useRef(false);
+  const paymentHandledRef = useRef(false);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -65,40 +68,44 @@ function Promotion() {
   };
 
   const handleSubmit = async () => {
-    const token = localStorage.getItem("token");
-    const form = new FormData();
 
-    Object.keys(formData).forEach((key)=>{
-        form.append(key, formData[key]);
-    });
+    if(isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
 
-    images.forEach((img)=>{
-        form.append("images", img);
-    });
-
-    form.append("deskripsi", JSON.stringify(deskripsi));
     try{
+      const token = localStorage.getItem("token");
+
+      const form = new FormData();
+
+      Object.keys(formData).forEach(key=>{
+        form.append(key, formData[key]);
+      });
+
+      images.forEach(img=>{
+        form.append("images", img);
+      });
+
+      form.append("deskripsi", JSON.stringify(deskripsi));
 
       const response = await fetch(
-        "http://localhost:5000/promotion",
+        "http://192.168.101.37:5000/promotion",
         {
-            method:"POST",
-            headers:{
-                Authorization:`Bearer ${token}`
-            },
-            body:form
+          method:"POST",
+          headers:{
+              Authorization:`Bearer ${token}`
+          },
+          body:form
         }
       );
 
       const data = await response.json();
 
       if(response.ok){
-        setShowConfirm(false);
-        setShowNotif(true);
+          setShowConfirm(false);
+          setShowNotif(true);
       }else{
-        alert(data.message);
+          alert(data.message);
       }
-
     }catch(err){
         console.log(err);
     }
@@ -146,17 +153,35 @@ function Promotion() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    fetch("http://localhost:5000/exclusive", {
+    fetch("http://192.168.101.37:5000/exclusive", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log(data); // cek hasil
+        // console.log(data);
         setExclusive(data.exclusive);
       })
       .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    const pending = JSON.parse(
+      localStorage.getItem("pendingPromotionPayment")
+    );
+
+    const dataForm = pending?.formData ?? formData;
+
+    if (!pending) return;
+
+    setQrisData({
+      qrImage: pending.qrImage,
+    });
+
+    setShowQris(true);
+
+    checkPayment(pending.partner_ref_no);
   }, []);
 
   const handlePayment = () => {
@@ -171,16 +196,18 @@ function Promotion() {
     navigate("/payment");
   };
 
-   const [showQris, setShowQris] = useState(false);
+  const [showQris, setShowQris] = useState(false);
   const [qrisData, setQrisData] = useState(null);
   const [loadingQris, setLoadingQris] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   const handleGenerateQRIS = async () => {
+    if (loadingQris) return;
+    setLoadingQris(true);
     try{
-      setLoadingQris(true);
       const token = localStorage.getItem("token");
       const res = await fetch(
-        "http://localhost:5000/payment/generate-qris",
+        "http://192.168.101.37:5000/payment/generate-qris",
         {
           method:"POST",
           headers:{
@@ -188,14 +215,14 @@ function Promotion() {
               Authorization:`Bearer ${token}`
           },
           body:JSON.stringify({
-              amount:15000
+              amount:2500
           })
         }
       );
 
       const data = await res.json();
-      console.log("Generate QRIS:", data);
-      console.log("HTTP:", res.status);
+      // console.log("Generate QRIS:", data);
+      // console.log("HTTP:", res.status);
       setLoadingQris(false);
 
       if(!res.ok){
@@ -203,9 +230,19 @@ function Promotion() {
         return;
       }
       setQrisData(data);
+
+      localStorage.setItem(
+        "pendingPromotionPayment",
+        JSON.stringify({
+          partner_ref_no: data.partner_ref_no,
+          qrImage: data.qrImage,
+          formData,
+          deskripsi,
+        })
+      );
       setShowConfirm(false);
       setShowQris(true);
-      console.log("Memulai polling");
+      // console.log("Memulai polling");
       startCheckingPayment(data.partner_ref_no);
     }catch(err){
       console.log(err);
@@ -215,36 +252,67 @@ function Promotion() {
   }
 
   const startCheckingPayment = (partner_ref_no)=>{
-    console.log("startCheckingPayment dipanggil");
-    console.log(partner_ref_no);
+    checkPayment(partner_ref_no);
+  }
+  
+  const checkPayment = (partner_ref_no) => {
+    if(intervalRef.current){
+        return;
+    }
 
     const token = localStorage.getItem("token");
-    const interval = setInterval(async()=>{
-      const res = await fetch(
-        `http://localhost:5000/payment/query/${partner_ref_no}`,
-        {
-            headers:{
-                Authorization:`Bearer ${token}`
-            }
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    intervalRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `http://192.168.101.37:5000/payment/query/${partner_ref_no}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await res.json();
+
+        if (data.responseData?.qrisStatus === "PAID") {
+
+          if(paymentHandledRef.current) return;
+          paymentHandledRef.current=true;
+
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+
+          localStorage.removeItem("pendingPromotionPayment");
+          setShowQris(false);
+
+          await handleSubmit();
         }
-      );
-      const data = await res.json();
-      console.log(data);
-      console.log(data.responseData.qrisStatus);
-      if(data.responseData?.qrisStatus ==="PAID"){
-        clearInterval(interval);
-        console.log("Pembayaran berhasil");
-        setShowQris(false);
-        await handleSubmit();
+
+      } catch(err){
+        console.log(err);
       }
+
     },3000);
-  }
+  };
 
   return (
     <>
       <NavbarIntern />
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-10 py-8">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-blue-800 hover:text-blue-600 font-medium mb-5 cursor-pointer transition"
+          >
+            <ArrowLeft size={20} />
+            Kembali
+          </button>
           <h1 className="text-4xl font-bold text-blue-800 mb-10">
             Tambah Properti Baru
           </h1>
@@ -269,6 +337,7 @@ function Promotion() {
                     />
                     <input
                       name="name"
+                      value={formData.name}
                       onChange={handleChange}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
                     />
@@ -326,6 +395,7 @@ function Promotion() {
                 </label>
                 <input
                   name="address"
+                  value={formData.address}
                   onChange={handleChange}
                   className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
                 />
@@ -339,6 +409,7 @@ function Promotion() {
                       type="number"
                       placeholder="Rp 0"
                       name="price"
+                      value={formData.price}
                       onChange={handleChange}
                       onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
@@ -389,6 +460,7 @@ function Promotion() {
                     <input
                       type="double"
                       name="luasTanah"
+                      value={formData.luasTanah}
                       onChange={handleChange}
                       onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
@@ -407,6 +479,7 @@ function Promotion() {
                     <input
                       type="number"
                       name="luasBangunan"
+                      value={formData.luasBangunan}
                       onChange={handleChange}
                       onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
@@ -425,6 +498,7 @@ function Promotion() {
                     <input
                       type="number"
                       name="listrik"
+                      value={formData.listrik}
                       onChange={handleChange}
                       onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
@@ -446,6 +520,7 @@ function Promotion() {
                     <input
                       type="number"
                       name="kt"
+                      value={formData.kt}
                       onChange={handleChange}
                       onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
@@ -464,6 +539,7 @@ function Promotion() {
                     <input
                       type="number"
                       name="km"
+                      value={formData.km}
                       onChange={handleChange}
                       onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
@@ -482,6 +558,7 @@ function Promotion() {
                     <input
                       type="text"
                       name="sertifikat"
+                      value={formData.sertifikat}
                       onChange={handleChange}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
                     />
@@ -621,6 +698,7 @@ function Promotion() {
 
                  <button
                     type="button"
+                    disabled={loadingQris || showQris}
                     onClick={() => {
                         if (exclusive === 1) {
                             handleSubmit();
@@ -630,9 +708,12 @@ function Promotion() {
                     }}
                     className={`px-6 py-2 rounded-lg text-white font-semibold transition-all duration-300 cursor-pointer
                     ${
-                        exclusive === 1
-                            ? "bg-blue-700 hover:bg-blue-800"
-                            : "bg-green-600 hover:bg-green-700"
+                      loadingQris
+                        ? "bg-gray-400 cursor-not-allowed"
+                        :
+                      exclusive === 1
+                          ? "bg-blue-700 hover:bg-blue-800"
+                          : "bg-green-600 hover:bg-green-700"
                     }`}
                 >
                     {exclusive === 1 ? "Ya, Simpan" : "Bayar"}
@@ -668,8 +749,11 @@ function Promotion() {
                 <h2 className="text-2xl font-bold text-center">
                     Pembayaran QRIS
                 </h2>
-                <p className="text-center text-gray-500 mt-2">
+                <p className="text-center text-gray-600 mt-2">
                     Silakan scan QRIS berikut
+                </p>
+                <p className="text-center text-gray-500 mt-2">
+                    Bisa dengan melakukan screenshot jika menggunakan 1 device atau langsung scan dari layar.
                 </p>
                 <div className="flex justify-center mt-6">
                   <img

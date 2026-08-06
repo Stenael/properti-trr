@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavbarIntern from "./NavbarIntern";
-import {ImagePlus, Plus, Trash2, Save, Home, MapPin, Zap, Ruler, FileText, Bed, Bath, Bookmark} from "lucide-react";
-
+import {ImagePlus, Plus, Trash2, Save, Home, MapPin, Zap, Ruler, FileText, Bed, Bath, Bookmark, ArrowLeft} from "lucide-react";
 function Edit() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -37,7 +36,7 @@ function Edit() {
 
       const token = localStorage.getItem("token");
 
-      fetch(`http://localhost:5000/property/${id}`,{
+      fetch(`http://192.168.101.37:5000/property/${id}`,{
           headers:{
               Authorization:`Bearer ${token}`
           }
@@ -112,7 +111,7 @@ function Edit() {
 
       const token=localStorage.getItem("token");
 
-      const res=await fetch(`http://localhost:5000/property/${id}`,{
+      const res=await fetch(`http://192.168.101.37:5000/property/${id}`,{
           method:"PUT",
           headers:{
               Authorization:`Bearer ${token}`
@@ -174,6 +173,14 @@ function Edit() {
     <NavbarIntern/>
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-10 py-8">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-blue-800 hover:text-blue-600 font-medium mb-5 cursor-pointer transition"
+        >
+          <ArrowLeft size={20} />
+          Kembali
+        </button>
         <h1 className="text-4xl font-bold text-blue-800 mb-10">
           Edit Properti
         </h1>
@@ -289,7 +296,6 @@ function Edit() {
                   className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
                 >
                   <option>Rumah</option>
-                  <option>Apartemen</option>
                   <option>Ruko</option>
                   <option>Tanah</option>
                 </select>
@@ -452,6 +458,9 @@ function Edit() {
                     className="hidden"
                     onChange={handleImage}
                   />
+                  <p className="text-xs text-red-500 mt-2">
+                      Maksimal 10 gambar
+                    </p>
                 </label>
               </div>
 
@@ -463,7 +472,7 @@ function Edit() {
                       src={
                           img instanceof File
                               ? URL.createObjectURL(img)
-                              : `http://localhost:5000/uploads/${img}`
+                              : `http://192.168.101.37:5000/uploads/${img}`
                       }
                       alt=""
                       className="rounded-lg h-36 w-full object-cover border"
