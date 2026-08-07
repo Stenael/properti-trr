@@ -29,13 +29,19 @@ function Promotion() {
     village: "",
     district: "",
     building: "Rumah",
+    priceType: "global",
     price: "",
+    pricePerMeter: "",
+    lenght: "",
+    width: "",
     luasTanah: "",
     luasBangunan: "",
     listrik: "",
     type: "Dijual",
     kt: "",
+    ktPlus: "",
     km: "",
+    kmPlus: "",
     sertifikat: "",
   });
 
@@ -48,6 +54,43 @@ function Promotion() {
 
   const [showNotif, setShowNotif] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+  const [missingFields, setMissingFields] = useState([]);
+
+  const validateForm = () => {
+    const missing = [];
+
+    if (!formData.name.trim()) missing.push("Nama Properti");
+    if (!formData.district) missing.push("Kecamatan");
+    if (!formData.village) missing.push("Kelurahan");
+    if (!formData.address.trim()) missing.push("Alamat");
+
+    if (formData.priceType === "global") {
+      if (!formData.price) missing.push("Harga");
+    } else {
+      if (!formData.pricePerMeter) missing.push("Harga per m²");
+    }
+
+    if (!formData.building) missing.push("Tipe Properti");
+    if (!formData.type) missing.push("Kategori");
+
+    if (!formData.luasTanah) missing.push("Luas Tanah");
+    if (!formData.luasBangunan) missing.push("Luas Bangunan");
+    if (!formData.listrik) missing.push("Listrik");
+
+    if (!formData.kt) missing.push("Kamar Tidur");
+    if (!formData.km) missing.push("Kamar Mandi");
+
+    if (!formData.sertifikat.trim()) missing.push("Sertifikat");
+
+    if (images.length === 0) missing.push("Foto Properti");
+
+    const desc = deskripsi.filter((d) => d.trim() !== "");
+
+    if (desc.length === 0) missing.push("Deskripsi");
+
+    return missing;
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -111,6 +154,8 @@ function Promotion() {
       const data = await response.json();
 
       if (response.ok) {
+        localStorage.removeItem("promotionDraft");
+        
         setShowConfirm(false);
         setShowNotif(true);
       } else {
@@ -318,6 +363,63 @@ function Promotion() {
       price: value,
     }));
   };
+
+  useEffect(() => {
+    if (formData.length && formData.width) {
+      setFormData((prev) => ({
+        ...prev,
+
+        luasTanah: Number(prev.length) * Number(prev.width),
+      }));
+    }
+  }, [formData.length, formData.width]);
+
+  const [showKtPlus, setShowKtPlus] = useState(false);
+  const [showKmPlus, setShowKmPlus] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "promotionDraft",
+      JSON.stringify({
+        formData,
+        deskripsi,
+        districtId,
+        showKtPlus,
+        showKmPlus,
+      }),
+    );
+  }, [formData, deskripsi, districtId, showKtPlus, showKmPlus]);
+
+  useEffect(() => {
+    const draft = localStorage.getItem("promotionDraft");
+
+    if (!draft) return;
+
+    const data = JSON.parse(draft);
+
+    setFormData(data.formData);
+    setDeskripsi(data.deskripsi);
+    setDistrictId(data.districtId || "");
+    setShowKtPlus(data.showKtPlus || false);
+    setShowKmPlus(data.showKmPlus || false);
+  }, []);
+
+  useEffect(() => {
+    if (!districtId) return;
+
+    const loadVillage = async () => {
+      const res = await fetch(
+        `https://www.emsifa.com/api-wilayah-indonesia/api/villages/${districtId}.json`,
+      );
+
+      const data = await res.json();
+
+      setVillages(data);
+    };
+
+    loadVillage();
+  }, [districtId]);
+
   return (
     <>
       <NavbarIntern />
@@ -337,6 +439,15 @@ function Promotion() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
+
+              const missing = validateForm();
+
+              if (missing.length > 0) {
+                setMissingFields(missing);
+                setShowValidation(true);
+                return;
+              }
+
               setShowConfirm(true);
             }}
             className="space-y-10"
@@ -414,17 +525,49 @@ function Promotion() {
                 />
               </div>
               <div className="mt-6">
-                <label className="font-medium block mb-2">Harga</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Rp 0,00"
-                    name="price"
-                    value={formatPrice(formData.price)}
-                    onChange={handlePriceChange}
-                    className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
-                  />
-                </div>
+                <label className="font-medium block mb-2">Jenis Harga</label>
+
+                <select
+                  name="priceType"
+                  value={formData.priceType}
+                  onChange={handleChange}
+                  className="w-full h-12 rounded-lg border border-gray-300 px-4"
+                >
+                  <option value="global">Harga Global</option>
+
+                  <option value="per_meter">Harga per m²</option>
+                </select>
+              </div>
+              <div className="mt-6">
+                <label className="font-medium block mb-2">
+                  {formData.priceType === "global" ? "Harga" : "Harga / m²"}
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="Rp. 0,00"
+                  value={
+                    formData.priceType === "global"
+                      ? formatPrice(formData.price)
+                      : formatPrice(formData.pricePerMeter)
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+
+                    if (formData.priceType === "global") {
+                      setFormData((prev) => ({
+                        ...prev,
+                        price: value,
+                      }));
+                    } else {
+                      setFormData((prev) => ({
+                        ...prev,
+                        pricePerMeter: value,
+                      }));
+                    }
+                  }}
+                  className="w-full h-12 rounded-lg border border-gray-300 px-4"
+                />
               </div>
               <div className="grid md:grid-cols-2 gap-6 mt-6">
                 <div>
@@ -455,10 +598,39 @@ function Promotion() {
                   </select>
                 </div>
               </div>
-              <div className="grid md:grid-cols-3 gap-6 mt-6">
+              <div className="grid md:grid-cols-4 gap-6 mt-6">
+                <div>
+                  <label className="font-medium block mb-2">
+                    Dimensi Tanah
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      name="length"
+                      placeholder="Panjang"
+                      value={formData.length}
+                      onChange={handleChange}
+                      className="w-full h-12 rounded-lg border border-gray-300 px-4"
+                    />
+
+                    <span className="font-semibold">×</span>
+
+                    <input
+                      type="number"
+                      name="width"
+                      placeholder="Lebar"
+                      value={formData.width}
+                      onChange={handleChange}
+                      className="w-full h-12 rounded-lg border border-gray-300 px-4"
+                    />
+
+                    <span className="text-gray-500">m</span>
+                  </div>
+                </div>
                 <div>
                   <label className="font-medium block mb-2">Luas Tanah</label>
-                  <div className="relative">
+                  <div className="relative flex flex-row items-center gap-2">
                     <Ruler
                       size={18}
                       className="absolute left-4 top-4 text-gray-400"
@@ -471,13 +643,14 @@ function Promotion() {
                       onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
                     />
+                    <p className="text-gray-500">m²</p>
                   </div>
                 </div>
                 <div>
                   <label className="font-medium block mb-2">
                     Luas Bangunan
                   </label>
-                  <div className="relative">
+                  <div className="relative flex flex-row items-center gap-2">
                     <Ruler
                       size={18}
                       className="absolute left-4 top-4 text-gray-400"
@@ -490,11 +663,12 @@ function Promotion() {
                       onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
                     />
+                    <p className="text-gray-500">m²</p>
                   </div>
                 </div>
                 <div>
                   <label className="font-medium block mb-2">Listrik</label>
-                  <div className="relative">
+                  <div className="relative flex flex-row items-center gap-2">
                     <Zap
                       size={18}
                       className="absolute left-4 top-4 text-gray-400"
@@ -507,6 +681,7 @@ function Promotion() {
                       onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
                     />
+                    <p className="text-gray-500">Watt</p>
                   </div>
                 </div>
               </div>
@@ -514,37 +689,113 @@ function Promotion() {
               <div className="grid md:grid-cols-3 gap-6 mt-6">
                 <div>
                   <label className="font-medium block mb-2">Kamar Tidur</label>
-                  <div className="relative">
-                    <Bed
-                      size={18}
-                      className="absolute left-4 top-4 text-gray-400"
-                    />
-                    <input
-                      type="number"
-                      name="kt"
-                      value={formData.kt}
-                      onChange={handleChange}
-                      onWheel={(e) => e.target.blur()}
-                      className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
-                    />
+
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-1">
+                      <Bed
+                        size={18}
+                        className="absolute left-4 top-4 text-gray-400"
+                      />
+
+                      <input
+                        type="number"
+                        name="kt"
+                        value={formData.kt}
+                        onChange={handleChange}
+                        onWheel={(e) => e.target.blur()}
+                        className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
+                      />
+                    </div>
+
+                    {showKtPlus && (
+                      <>
+                        <span className="font-bold text-lg">+</span>
+
+                        <input
+                          type="number"
+                          name="ktPlus"
+                          value={formData.ktPlus}
+                          onChange={handleChange}
+                          onWheel={(e) => e.target.blur()}
+                          className="w-20 h-12 rounded-lg border border-gray-300 text-center"
+                        />
+                      </>
+                    )}
                   </div>
+
+                  <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={showKtPlus}
+                      onChange={(e) => {
+                        setShowKtPlus(e.target.checked);
+
+                        if (!e.target.checked) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            ktPlus: "",
+                          }));
+                        }
+                      }}
+                    />
+
+                    <span className="text-sm text-gray-600">Tambahkan +</span>
+                  </label>
                 </div>
                 <div>
                   <label className="font-medium block mb-2">Kamar Mandi</label>
-                  <div className="relative">
-                    <Bath
-                      size={18}
-                      className="absolute left-4 top-4 text-gray-400"
-                    />
-                    <input
-                      type="number"
-                      name="km"
-                      value={formData.km}
-                      onChange={handleChange}
-                      onWheel={(e) => e.target.blur()}
-                      className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
-                    />
+
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-1">
+                      <Bath
+                        size={18}
+                        className="absolute left-4 top-4 text-gray-400"
+                      />
+
+                      <input
+                        type="number"
+                        name="km"
+                        value={formData.km}
+                        onChange={handleChange}
+                        onWheel={(e) => e.target.blur()}
+                        className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
+                      />
+                    </div>
+
+                    {showKmPlus && (
+                      <>
+                        <span className="font-bold text-lg">+</span>
+
+                        <input
+                          type="number"
+                          name="kmPlus"
+                          value={formData.kmPlus}
+                          onChange={handleChange}
+                          onWheel={(e) => e.target.blur()}
+                          className="w-20 h-12 rounded-lg border border-gray-300 text-center"
+                        />
+                      </>
+                    )}
                   </div>
+
+                  <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={showKmPlus}
+                      onChange={(e) => {
+                        setShowKmPlus(e.target.checked);
+
+                        if (!e.target.checked) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            kmPlus: "",
+                          }));
+                        }
+                      }}
+                    />
+
+                    <span className="text-sm text-gray-600">Tambahkan +</span>
+                  </label>
                 </div>
                 <div>
                   <label className="font-medium block mb-2">Sertifikat</label>
@@ -656,7 +907,7 @@ function Promotion() {
           </form>
         </div>
         {showConfirm && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-5">
             <div className="bg-white rounded-2xl p-6 w-96 shadow-xl">
               <h2 className="text-xl font-bold mb-3">
                 Apakah data yang anda masukkan sudah tepat?
@@ -702,7 +953,7 @@ function Promotion() {
           </div>
         )}
         {showNotif && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-5">
             <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
               <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
                 <Bookmark className="text-blue-800" size={34} />
@@ -723,7 +974,7 @@ function Promotion() {
           </div>
         )}
         {showQris && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-5">
             <div className="bg-white rounded-2xl p-8 w-[430px]">
               <h2 className="text-2xl font-bold text-center">
                 Pembayaran QRIS
@@ -743,6 +994,40 @@ function Promotion() {
                 <div className="text-sm text-gray-500 mt-2">
                   Menunggu pembayaran...
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {showValidation && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-5">
+            <div className="bg-white rounded-2xl p-6 w-[420px] shadow-xl">
+              <h2 className="text-xl font-bold text-red-600">
+                Data Belum Lengkap
+              </h2>
+
+              <p className="text-gray-600 mt-2">
+                Silakan lengkapi data berikut:
+              </p>
+
+              <ul className="mt-4 space-y-2 max-h-72 overflow-y-auto">
+                {missingFields.map((item, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center gap-2 text-gray-700"
+                  >
+                    <span className="text-red-500 font-bold">•</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => setShowValidation(false)}
+                  className="px-5 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900"
+                >
+                  OK
+                </button>
               </div>
             </div>
           </div>

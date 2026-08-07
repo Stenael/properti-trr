@@ -141,7 +141,7 @@ function Login() {
               </div>
               <button
                 type="submit"
-                className="w-full h-12 rounded-xl bg-blue-800 text-white font-semibold hover:bg-blue-500 duration-300"
+                className="w-full h-12 rounded-xl bg-blue-800 text-white font-semibold hover:bg-blue-500 duration-300 cursor-pointer"
               >
                 Login
               </button>
@@ -152,7 +152,7 @@ function Login() {
               <button
                 type="button"
                 onClick={() => navigate("/register")}
-                className="w-full h-12 rounded-xl border border-blue-800 text-blue-800 font-semibold hover:bg-blue-800 hover:text-white duration-300"
+                className="w-full h-12 rounded-xl border border-blue-800 text-blue-800 font-semibold hover:bg-blue-800 hover:text-white duration-300 cursor-pointer"
               >
                 Daftar
               </button>

@@ -207,7 +207,7 @@ function SearchNav({ onSearch }) {
                 </select>
               </div>
               <div className="col-span-4 flex items-center border border-gray-300 rounded-xl px-4 h-14 gap-3">
-                <Wallet className="text-blue-700" />
+                <Wallet className="mr-2 text-blue-700" size={40} />
                 <input
                   type="text"
                   placeholder="Min"
@@ -225,7 +225,7 @@ function SearchNav({ onSearch }) {
                 />
               </div>
               <div className="col-span-2 flex items-center border border-gray-300 rounded-xl px-4 h-14">
-                <Wallet className="mr-2 text-blue-700" />
+                <Wallet className="mr-2 text-blue-700" size={18} />
                 <select
                   value={sortPrice}
                   onChange={(e) => setSortPrice(e.target.value)}

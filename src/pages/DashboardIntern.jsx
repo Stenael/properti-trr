@@ -551,8 +551,18 @@ function DashboardIntern() {
                       {item.district}, {item.village}
                     </div>
 
-                    <div className="text-2xl font-bold text-green-600 mt-4">
-                      Rp {Number(item.price).toLocaleString("id-ID")}
+                    <div className="mt-4">
+                      <div className="text-2xl font-bold text-green-600">
+                        {item.price_type === "global"
+                          ? `Rp ${Number(item.price).toLocaleString("id-ID")}`
+                          : `Rp ${Number(item.price_perMeter).toLocaleString("id-ID")} / m²`}
+                      </div>
+
+                      <div className="text-sm text-gray-500">
+                        {item.price_type === "global"
+                          ? "Harga Global"
+                          : "Harga per Meter Persegi"}
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mt-6 text-sm">
@@ -568,12 +578,14 @@ function DashboardIntern() {
 
                       <div className="flex items-center gap-2">
                         <Bed size={16} />
-                        {item.kt} KT
+                        {item.kt}
+                        {item.kt_plus ? `+${item.kt_plus}` : ""} KT
                       </div>
 
                       <div className="flex items-center gap-2">
                         <Bath size={16} />
-                        {item.km} KM
+                        {item.km}
+                        {item.km_plus ? `+${item.km_plus}` : ""} KM
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -667,7 +679,7 @@ function DashboardIntern() {
             </div>
           )}
           {showConfirm && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-5">
               <div className="bg-white rounded-2xl p-6 w-96 shadow-xl">
                 <h2 className="text-xl font-bold mb-3">
                   Tandai Properti Terjual
@@ -708,7 +720,7 @@ function DashboardIntern() {
             </div>
           )}
           {showNotif && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-5">
               <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
                 <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
                   <BanknoteCheck className="text-green-600" size={34} />
@@ -727,7 +739,7 @@ function DashboardIntern() {
             </div>
           )}
           {showConfirmActive && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-5">
               <div className="bg-white rounded-2xl p-6 w-96 shadow-xl">
                 <p className="text-gray-600">
                   Apakah Anda ingin mengaktifkan kembali promosi properti ini?
@@ -758,7 +770,7 @@ function DashboardIntern() {
             </div>
           )}
           {showNotifActive && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-5">
               <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
                 <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
                   <BanknoteCheck className="text-green-600" size={34} />
@@ -776,7 +788,7 @@ function DashboardIntern() {
             </div>
           )}
           {showQris && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-5">
               <div className="bg-white rounded-2xl p-8 w-[430px]">
                 <h2 className="text-2xl font-bold text-center">
                   Pembayaran QRIS
@@ -799,7 +811,7 @@ function DashboardIntern() {
             </div>
           )}
           {showDeleteConfirm && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-5">
               <div className="bg-white rounded-2xl p-6 w-96 shadow-xl">
                 <h2 className="text-xl font-bold mb-3">Hapus Properti</h2>
 
@@ -835,7 +847,7 @@ function DashboardIntern() {
             </div>
           )}
           {showDeleteNotif && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-5">
               <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
                 <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto">
                   <Trash2 className="text-red-600" size={32} />

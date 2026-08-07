@@ -13,6 +13,7 @@ import {
   User,
   MessageCircle,
   ArrowLeft,
+  RulerDimensionLine,
 } from "lucide-react";
 
 function DetailPublic() {
@@ -95,13 +96,26 @@ function DetailPublic() {
             <div className="mt-8 grid grid-cols-3 md:grid-cols-6 gap-6">
               <div className="text-center">
                 <BedDouble className="mx-auto text-blue-700" />
-                <p>{property.kt}</p>
+                <p>
+                  {property.kt}
+                  {property.kt_plus ? `+${property.kt_plus}` : ""}
+                </p>
                 <small>Kamar Tidur</small>
               </div>
               <div className="text-center">
                 <Bath className="mx-auto text-blue-700" />
-                <p>{property.km}</p>
+                <p>
+                  {property.km}
+                  {property.km_plus ? `+${property.km_plus}` : ""}
+                </p>
                 <small>Kamar Mandi</small>
+              </div>
+              <div className="text-center">
+                <RulerDimensionLine className="mx-auto text-blue-700" />
+                <p>
+                  {property.length} × {property.width} m
+                </p>
+                <small>Dimensi</small>
               </div>
               <div className="text-center">
                 <LandPlot className="mx-auto text-blue-700" />
@@ -149,9 +163,19 @@ function DetailPublic() {
 
           <div>
             <div className="bg-white rounded-2xl shadow-xl p-8">
-              <h2 className="text-3xl font-bold text-green-600">
-                Rp {formatPrice(property.price)}
-              </h2>
+              <div>
+                <h2 className="text-2xl font-bold text-green-600">
+                  {property.price_type === "global"
+                    ? `Rp ${formatPrice(property.price)}`
+                    : `Rp ${formatPrice(property.price_perMeter)} / m²`}
+                </h2>
+
+                <p className="text-gray-500 mt-1">
+                  {property.price_type === "global"
+                    ? "Harga Global"
+                    : "Harga per Meter Persegi"}
+                </p>
+              </div>
               <div className="mt-6 border-t pt-5">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
@@ -176,7 +200,11 @@ function DetailPublic() {
 
               Properti : ${property.name}
               Lokasi : ${property.village}, ${property.district}
-              Harga : Rp ${formatPrice(property.price)}
+              Harga : ${
+                property.price_type === "global"
+                  ? `Rp ${formatPrice(property.price)}`
+                  : `Rp ${formatPrice(property.price_perMeter)} / m²`
+              }
 
               Apakah properti ini masih tersedia?`;
                   window.open(

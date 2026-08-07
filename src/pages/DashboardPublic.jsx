@@ -10,6 +10,7 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  RulerDimensionLine
 } from "lucide-react";
 import Navbar from "../pages/Navbar";
 import Headline from "../pages/Headline";
@@ -135,20 +136,36 @@ function DashboardPublic() {
                     {item.district}, {item.village}
                   </span>
                 </div>
-                <p className="mt-5 text-2xl font-bold text-green-600">
-                  Rp {formatPrice(item.price)}
-                </p>
+                <div className="mt-5">
+                  <p className="text-2xl font-bold text-green-600">
+                    {item.price_type === "global"
+                      ? `Rp ${formatPrice(item.price)}`
+                      : `Rp ${formatPrice(item.price_perMeter)} / m²`}
+                  </p>
+
+                  <p className="text-sm text-gray-500">
+                    {item.price_type === "global"
+                      ? "Harga Global"
+                      : "Harga per Meter Persegi"}
+                  </p>
+                </div>
                 <div className="grid grid-cols-4 gap-4 mt-6 text-center">
                   <div>
                     <BedDouble
                       size={20}
                       className="mx-auto mb-1 text-blue-700"
                     />
-                    <p>{item.kt} KT</p>
+                    <p>
+                      {item.kt}
+                      {item.kt_plus ? `+${item.kt_plus}` : ""} KT
+                    </p>
                   </div>
                   <div>
                     <Bath size={20} className="mx-auto mb-1 text-blue-700" />
-                    <p>{item.km} KM</p>
+                    <p>
+                      {item.km}
+                      {item.km_plus ? `+${item.km_plus}` : ""} KM
+                    </p>
                   </div>
                   <div>
                     <LandPlot
@@ -162,7 +179,14 @@ function DashboardPublic() {
                     <p>{item.luasBangunan} m²</p>
                   </div>
                 </div>
-                <div className="mt-6 border-t pt-4 flex items-center justify-between">
+                <div className="mt-4 border-t pt-4 text-sm text-gray-600 flex items-center gap-2">
+                  <RulerDimensionLine size={18} className="text-blue-700" />
+
+                  <span>
+                    Dimensi : {item.length} m × {item.width} m
+                  </span>
+                </div>
+                <div className="mt-4 border-t pt-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center">
                       <User className="text-blue-700" size={20} />
@@ -182,7 +206,11 @@ function DashboardPublic() {
 
                   Properti : ${item.name}
                   Lokasi : ${item.village}, ${item.district}
-                  Harga : Rp ${formatPrice(item.price)}
+                  Harga : ${
+                    item.price_type === "global"
+                      ? `Rp ${formatPrice(item.price)}`
+                      : `Rp ${formatPrice(item.price_perMeter)} / m²`
+                  }
 
                   Apakah properti ini masih tersedia?`;
                       window.open(
