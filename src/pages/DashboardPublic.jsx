@@ -1,9 +1,19 @@
-import React from 'react'
+import React from "react";
 import { useEffect, useState } from "react";
-import { MapPin, BedDouble, Bath, LandPlot, House, MessageCircle, User, ChevronLeft, ChevronRight } from "lucide-react";
-import Navbar from '../pages/Navbar'
-import Headline from '../pages/Headline'
-import Footer from './Footer';
+import {
+  MapPin,
+  BedDouble,
+  Bath,
+  LandPlot,
+  House,
+  MessageCircle,
+  User,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import Navbar from "../pages/Navbar";
+import Headline from "../pages/Headline";
+import Footer from "./Footer";
 import { useNavigate } from "react-router-dom";
 function DashboardPublic() {
   const navigate = useNavigate();
@@ -17,8 +27,7 @@ function DashboardPublic() {
       .catch((err) => console.log(err));
   }, []);
 
-  const formatPrice = (price) =>
-    Number(price).toLocaleString("id-ID");
+  const formatPrice = (price) => Number(price).toLocaleString("id-ID");
 
   const nextImage = (property) => {
     setCurrentImage((prev) => {
@@ -26,10 +35,7 @@ function DashboardPublic() {
 
       return {
         ...prev,
-        [property.id]:
-          index === property.images.length - 1
-            ? 0
-            : index + 1,
+        [property.id]: index === property.images.length - 1 ? 0 : index + 1,
       };
     });
   };
@@ -40,23 +46,20 @@ function DashboardPublic() {
 
       return {
         ...prev,
-        [property.id]:
-          index === 0
-            ? property.images.length - 1
-            : index - 1,
+        [property.id]: index === 0 ? property.images.length - 1 : index - 1,
       };
     });
   };
   return (
     <>
-    <Navbar></Navbar>
-    <Headline></Headline>
-    <div className="max-w-7xl mx-auto px-8 py-10">
+      <Navbar></Navbar>
+      <Headline></Headline>
+      <div className="max-w-7xl mx-auto px-8 py-10">
         <div className="mb-10">
-          <h2 className="text-4xl font-bold text-slate-800">
+          <h2 className="text-2xl md:text-4xl font-bold text-slate-800">
             Properti Terbaru
           </h2>
-          <p className="text-slate-500 mt-2">
+          <p className="text-sm md:text-base text-slate-500 mt-2">
             Temukan rumah, apartemen, dan ruko terbaik.
           </p>
         </div>
@@ -123,7 +126,7 @@ function DashboardPublic() {
                 </div>
               </div>
               <div className="p-5">
-                <h3 className="font-bold text-xl line-clamp-1">
+                <h3 className="font-bold text-lg md:text-xl line-clamp-1">
                   {item.name}
                 </h3>
                 <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
@@ -141,40 +144,34 @@ function DashboardPublic() {
                       size={20}
                       className="mx-auto mb-1 text-blue-700"
                     />
-                    <p>{item.kt}</p>
+                    <p>{item.kt} KT</p>
                   </div>
                   <div>
-                    <Bath
+                    <Bath size={20} className="mx-auto mb-1 text-blue-700" />
+                    <p>{item.km} KM</p>
+                  </div>
+                  <div>
+                    <LandPlot
                       size={20}
                       className="mx-auto mb-1 text-blue-700"
                     />
-                    <p>{item.km}</p>
-                  </div>
-                  <div>
-                    <LandPlot 
-                      size={20}
-                      className="mx-auto mb-1 text-blue-700"/>
                     <p>{item.luasTanah} m²</p>
                   </div>
                   <div>
-                    <House 
-                      size={20}
-                      className="mx-auto mb-1 text-blue-700"/>
+                    <House size={20} className="mx-auto mb-1 text-blue-700" />
                     <p>{item.luasBangunan} m²</p>
                   </div>
                 </div>
                 <div className="mt-6 border-t pt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-full bg-blue-100 flex items-center justify-center">
-                      <User className="text-blue-700" size={20}/>
+                      <User className="text-blue-700" size={20} />
                     </div>
                     <div>
                       <p className="font-semibold text-gray-800">
                         {item.ownerName}
                       </p>
-                      <p className="text-sm text-gray-500">
-                        {item.ownerCity}
-                      </p>
+                      <p className="text-sm text-gray-500">{item.ownerCity}</p>
                     </div>
                   </div>
                   <button
@@ -191,9 +188,9 @@ function DashboardPublic() {
                       window.open(
                         `https://wa.me/${item.phone_number.replace(
                           /^0/,
-                          "62"
+                          "62",
                         )}?text=${encodeURIComponent(message)}`,
-                        "_blank"
+                        "_blank",
                       );
                     }}
                     className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-xl transition cursor-pointer"
@@ -209,9 +206,9 @@ function DashboardPublic() {
           ))}
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </>
-  )
+  );
 }
 
-export default DashboardPublic
+export default DashboardPublic;

@@ -53,7 +53,6 @@ function NavbarIntern() {
           >
             Profil
           </button>
-
         </div>
 
         <div className="hidden md:flex flex-1 justify-end">
@@ -74,7 +73,7 @@ function NavbarIntern() {
       </div>
 
       {open && (
-        <div className="md:hidden bg-white border-t shadow-lg">
+        <div className="md:hidden bg-white shadow-lg">
           <button
             onClick={() => {
               navigate("/");

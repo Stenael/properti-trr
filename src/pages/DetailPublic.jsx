@@ -2,7 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import {MapPin, BedDouble, Bath, LandPlot, House, Zap, FileText, User, MessageCircle, ArrowLeft} from "lucide-react";
+import {
+  MapPin,
+  BedDouble,
+  Bath,
+  LandPlot,
+  House,
+  Zap,
+  FileText,
+  User,
+  MessageCircle,
+  ArrowLeft,
+} from "lucide-react";
 
 function DetailPublic() {
   const { id } = useParams();
@@ -31,21 +42,20 @@ function DetailPublic() {
       </>
     );
 
-  const formatPrice = (price) =>
-    Number(price).toLocaleString("id-ID");
+  const formatPrice = (price) => Number(price).toLocaleString("id-ID");
 
   return (
     <>
       <Navbar />
       <div className="max-w-7xl mx-auto py-10 px-6">
         <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-blue-800 hover:text-blue-600 font-medium mb-5 cursor-pointer transition"
-          >
-            <ArrowLeft size={20} />
-            Kembali
-          </button>
+          type="button"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-blue-800 hover:text-blue-600 font-medium mb-5 cursor-pointer transition"
+        >
+          <ArrowLeft size={20} />
+          Kembali
+        </button>
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 order-1">
             <img
@@ -56,34 +66,31 @@ function DetailPublic() {
           </div>
           {property.images.length > 1 && (
             <div className="order-1 w-full md:w-32 flex flex-row md:flex-col gap-3 overflow-y-auto max-h-[600px]">
-            {property.images.map((img, index) => (
-              <img
-                key={index}
-                src={`http://192.168.101.37:5000/uploads/${img}`}
-                onClick={() => setMainImage(img)}
-                className={`h-28 w-28 rounded-xl object-cover cursor-pointer border-4 ${
-                  mainImage === img
-                    ? "border-blue-700"
-                    : "border-transparent"
-                }`}
-              />
-            ))}
-          </div>
+              {property.images.map((img, index) => (
+                <img
+                  key={index}
+                  src={`http://192.168.101.37:5000/uploads/${img}`}
+                  onClick={() => setMainImage(img)}
+                  className={`h-28 w-28 rounded-xl object-cover cursor-pointer border-4 ${
+                    mainImage === img ? "border-blue-700" : "border-transparent"
+                  }`}
+                />
+              ))}
+            </div>
           )}
         </div>
-    
+
         <div className="grid lg:grid-cols-3 gap-10 mt-10">
           <div className="lg:col-span-2">
             <span className="bg-blue-700 text-white px-5 py-2 rounded-full">
               {property.type}
             </span>
-            <h1 className="text-4xl font-bold mt-4">
+            <h1 className="text-2xl md:text-4xl font-bold mt-4">
               {property.name}
             </h1>
             <div className="flex items-center gap-2 mt-3 text-gray-500">
               <MapPin size={18} />
-              {property.address}, {property.village},{" "}
-              {property.district}
+              {property.address}, {property.village}, {property.district}
             </div>
             <div className="mt-8 grid grid-cols-3 md:grid-cols-6 gap-6">
               <div className="text-center">
@@ -119,9 +126,7 @@ function DetailPublic() {
             </div>
 
             <div className="mt-10">
-              <h2 className="text-2xl font-bold mb-2">
-                Dibuat tanggal
-              </h2>
+              <h2 className="text-2xl font-bold mb-2">Dibuat tanggal</h2>
               <div className="mb-5">
                 <p>
                   {new Date(property.created_at).toLocaleDateString("id-ID", {
@@ -131,15 +136,10 @@ function DetailPublic() {
                   })}
                 </p>
               </div>
-              <h2 className="text-2xl font-bold mb-5">
-                Deskripsi
-              </h2>
+              <h2 className="text-2xl font-bold mb-5">Deskripsi</h2>
               <div className="space-y-0 bg-blue-50 rounded-xl">
                 {property.deskripsi.map((item, index) => (
-                  <div
-                    key={index}
-                    className="p-3"
-                  >
+                  <div key={index} className="p-3">
                     {item}
                   </div>
                 ))}
@@ -182,9 +182,9 @@ function DetailPublic() {
                   window.open(
                     `https://wa.me/${property.phone_number.replace(
                       /^0/,
-                      "62"
+                      "62",
                     )}?text=${encodeURIComponent(message)}`,
-                    "_blank"
+                    "_blank",
                   );
                 }}
                 className="mt-6 w-full h-12 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold cursor-pointer"
@@ -198,19 +198,17 @@ function DetailPublic() {
           </div>
         </div>
       </div>
-      {
-        showImage && (
+      {showImage && (
         <div
-            onClick={() => setShowImage(false)}
-            className="fixed inset-0 bg-black/80 flex justify-center items-center z-50"
+          onClick={() => setShowImage(false)}
+          className="fixed inset-0 bg-black/80 flex justify-center items-center z-50"
         >
-            <img
-                src={`http://192.168.101.37:5000/uploads/${mainImage}`}
-                className="max-h-[90vh] max-w-[90vw] rounded-xl"
-            />
+          <img
+            src={`http://192.168.101.37:5000/uploads/${mainImage}`}
+            className="max-h-[90vh] max-w-[90vw] rounded-xl"
+          />
         </div>
-        )
-        }
+      )}
       <Footer />
     </>
   );

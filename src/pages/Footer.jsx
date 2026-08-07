@@ -1,10 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  MapPin,
-  Phone,
-  Mail,
-} from "lucide-react";
+import { MapPin, Phone, Mail } from "lucide-react";
 
 function Footer() {
   const navigate = useNavigate();
@@ -13,23 +9,19 @@ function Footer() {
     <footer className="bg-blue-900 text-white mt-20">
       <div className="max-w-7xl mx-auto px-8 py-14">
         <div className="grid md:grid-cols-3 gap-10">
-
           <div>
             <div className="flex items-center gap-3 mb-3">
-              <img src="/logo3white.png" alt="Logo" className="w-40" />
+              <img src="/logo3white.png" alt="Logo" className="w-30 md:w-40" />
             </div>
 
-            <p className="text-blue-100 leading-7">
-              Platform pencarian properti rumah dan
-              ruko terpercaya untuk
-              jual maupun sewa di Surabaya.
+            <p className="text-base text-blue-100 leading-7">
+              Platform pencarian properti rumah dan ruko terpercaya untuk jual
+              maupun sewa di Surabaya.
             </p>
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold mb-5">
-              Menu
-            </h2>
+            <h2 className="text-lg font-semibold mb-5">Menu</h2>
 
             <div className="flex flex-col gap-3">
               <button
@@ -56,12 +48,9 @@ function Footer() {
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold mb-5">
-              Kontak
-            </h2>
+            <h2 className="text-lg font-semibold mb-5">Kontak</h2>
 
             <div className="space-y-4 text-blue-100">
-
               <div className="flex gap-3">
                 <MapPin size={20} />
                 <span>Surabaya, Indonesia</span>
@@ -76,7 +65,6 @@ function Footer() {
                 <Mail size={20} />
                 <span>cvtrr2025@gmail.com</span>
               </div>
-
             </div>
           </div>
         </div>

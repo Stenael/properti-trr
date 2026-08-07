@@ -2,7 +2,17 @@ import React, { useEffect, useState } from "react";
 import Navbar from "./Navbar";
 import SearchNav from "./SearchNav";
 import Footer from "./Footer";
-import { MapPin, BedDouble, Bath, LandPlot, House, MessageCircle, User, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  MapPin,
+  BedDouble,
+  Bath,
+  LandPlot,
+  House,
+  MessageCircle,
+  User,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 function Sale() {
@@ -16,6 +26,11 @@ function Sale() {
     keyword: "",
     district: "",
     village: "",
+    minPrice: "",
+    maxPrice: "",
+    building: "",
+    kt: "",
+    km: "",
     sortPrice: "",
   });
 
@@ -31,53 +46,77 @@ function Sale() {
       .catch(console.error);
   }, []);
 
-  const formatPrice = (price) =>
-    Number(price).toLocaleString("id-ID");
+  const formatPrice = (price) => Number(price).toLocaleString("id-ID");
 
   const filteredProperties = [...properties]
-  .filter((property) => {
-    const keyword = filters.keyword.toLowerCase();
+    .filter((property) => {
+      if (
+        filters.keyword &&
+        ![property.name, property.address, property.district, property.village]
+          .join(" ")
+          .toLowerCase()
+          .includes(filters.keyword.toLowerCase())
+      ) {
+        return false;
+      }
 
-    const keywordMatch =
-      filters.keyword === "" ||
-      (property.name || "").toLowerCase().includes(keyword) ||
-      (property.district || "").toLowerCase().includes(keyword) ||
-      (property.village || "").toLowerCase().includes(keyword) ||
-      (property.address || "").toLowerCase().includes(keyword);
+      if (filters.district && property.district !== filters.district) {
+        return false;
+      }
 
-    const districtMatch =
-      filters.district === "" ||
-      property.district === filters.district;
+      if (filters.village && property.village !== filters.village) {
+        return false;
+      }
 
-    const villageMatch =
-      filters.village === "" ||
-      property.village === filters.village;
+      if (filters.building && property.building !== filters.building) {
+        return false;
+      }
 
-    return keywordMatch && districtMatch && villageMatch;
-  })
-  .sort((a, b) => {
-    if (filters.sortPrice === "asc") {
-      return Number(a.price) - Number(b.price);
-    }
+      if (filters.kt && Number(property.kt) < Number(filters.kt)) {
+        return false;
+      }
 
-    if (filters.sortPrice === "desc") {
-      return Number(b.price) - Number(a.price);
-    }
+      if (filters.km && Number(property.km) < Number(filters.km)) {
+        return false;
+      }
 
-    return 0;
-  });
+      if (
+        filters.minPrice &&
+        Number(property.price) < Number(filters.minPrice)
+      ) {
+        return false;
+      }
+
+      if (
+        filters.maxPrice &&
+        Number(property.price) > Number(filters.maxPrice)
+      ) {
+        return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (filters.sortPrice === "asc") {
+        return Number(a.price) - Number(b.price);
+      }
+
+      if (filters.sortPrice === "desc") {
+        return Number(b.price) - Number(a.price);
+      }
+
+      return 0;
+    });
 
   const indexOfLastProperty = currentPage * propertiesPerPage;
   const indexOfFirstProperty = indexOfLastProperty - propertiesPerPage;
 
   const currentProperties = filteredProperties.slice(
     indexOfFirstProperty,
-    indexOfLastProperty
+    indexOfLastProperty,
   );
 
-  const totalPages = Math.ceil(
-    filteredProperties.length / propertiesPerPage
-  );
+  const totalPages = Math.ceil(filteredProperties.length / propertiesPerPage);
 
   const nextImage = (property) => {
     setCurrentImage((prev) => {
@@ -85,10 +124,7 @@ function Sale() {
 
       return {
         ...prev,
-        [property.id]:
-          index === property.images.length - 1
-            ? 0
-            : index + 1,
+        [property.id]: index === property.images.length - 1 ? 0 : index + 1,
       };
     });
   };
@@ -99,10 +135,7 @@ function Sale() {
 
       return {
         ...prev,
-        [property.id]:
-          index === 0
-            ? property.images.length - 1
-            : index - 1,
+        [property.id]: index === 0 ? property.images.length - 1 : index - 1,
       };
     });
   };
@@ -110,12 +143,12 @@ function Sale() {
   return (
     <>
       <Navbar />
-      <SearchNav onSearch={handleSearch}/>
+      <SearchNav onSearch={handleSearch} />
       <div className="max-w-7xl mx-auto px-8 py-10">
-        <h1 className="text-4xl font-bold text-blue-900 mb-2">
+        <h1 className="text-2xl md:text-4xl font-bold text-blue-900 mb-2">
           Properti Dijual
         </h1>
-        <p className="text-gray-500 mb-8">
+        <p className="text-sm md:text-base text-gray-500 mb-8">
           Temukan properti impian Anda.
         </p>
 
@@ -127,7 +160,8 @@ function Sale() {
               onClick={() => navigate(`/property/${property.id}`)}
             >
               <div className="relative">
-                <img src={`http://192.168.101.37:5000/uploads/${
+                <img
+                  src={`http://192.168.101.37:5000/uploads/${
                     property.images[currentImage[property.id] || 0]
                   }`}
                   alt={property.name}
@@ -144,7 +178,7 @@ function Sale() {
                     >
                       <ChevronLeft size={18} />
                     </button>
-  
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -162,7 +196,7 @@ function Sale() {
                       <div
                         key={i}
                         className={`w-2 h-2 rounded-full ${
-                          (currentImage[property  .id] || 0) === i
+                          (currentImage[property.id] || 0) === i
                             ? "bg-white"
                             : "bg-white/50"
                         }`}
@@ -181,7 +215,7 @@ function Sale() {
                 </div>
               </div>
               <div className="p-6">
-                <h2 className="font-bold text-lg">
+                <h2 className="font-bold text-lg md:text-xl">
                   {property.name}
                 </h2>
                 <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
@@ -201,18 +235,18 @@ function Sale() {
                     <span>{property.km} KM</span>
                   </div>
                   <div className="flex flex-col items-center">
-                    <LandPlot size={20} className="text-blue-700 mb-1"/>
+                    <LandPlot size={20} className="text-blue-700 mb-1" />
                     <p>{property.luasTanah} m²</p>
                   </div>
                   <div className="flex flex-col items-center">
-                    <House size={20} className="text-blue-700 mb-1"/>
+                    <House size={20} className="text-blue-700 mb-1" />
                     <p>{property.luasBangunan} m²</p>
                   </div>
                 </div>
                 <div className="mt-6 border-t pt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1">
                     <div className="w-11 h-11 mr-2 rounded-full bg-blue-100 flex items-center justify-center">
-                      <User className="text-blue-700" size={20}/>
+                      <User className="text-blue-700" size={20} />
                     </div>
                     <div>
                       <p className="font-semibold text-gray-800">
@@ -237,9 +271,9 @@ function Sale() {
                       window.open(
                         `https://wa.me/${property.phone_number.replace(
                           /^0/,
-                          "62"
+                          "62",
                         )}?text=${encodeURIComponent(message)}`,
-                        "_blank"
+                        "_blank",
                       );
                     }}
                     className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-xl transition cursor-pointer"

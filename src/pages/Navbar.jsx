@@ -31,12 +31,8 @@ function Navbar() {
   return (
     <nav className="w-full bg-white shadow-md border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center">
-
         <div className="flex-1">
-          <div
-            onClick={() => navigate("/")}
-            className="cursor-pointer w-fit"
-          >
+          <div onClick={() => navigate("/")} className="cursor-pointer w-fit">
             <img src="/logo3.png" alt="Logo" className="w-30" />
           </div>
         </div>
@@ -79,7 +75,6 @@ function Navbar() {
         >
           {open ? <X size={30} /> : <Menu size={30} />}
         </button>
-
       </div>
 
       {open && (

@@ -4,22 +4,22 @@ import { Search } from "lucide-react";
 function Headline() {
   return (
     <section className="bg-[url('/bg.jpg')] bg-cover bg-center">
-      <div className="max-w-7xl mx-auto px-10 py-46">
+      <div className="max-w-7xl mx-auto px-5 py-10 md:px-10 md:py-46">
         <div className="text-center max-w-3xl mx-auto">
-          <p className="text-blue-800 font-bold tracking-widest uppercase">
+          <p className="text-blue-800 font-bold text-xs md:text-lg tracking-widest uppercase">
             Temukan Properti Anda
           </p>
-          <h1 className="mt-4 text-5xl font-bold text-gray-800 leading-tight">
+          <h1 className="mt-4 text-2xl md:text-5xl font-bold text-gray-800 leading-tight">
             Rumah dan Ruko
             <br />
             Sesuai Kebutuhan Anda
           </h1>
-          <p className="mt-6 text-lg text-blue-800 leading-8">
-            Cari properti dijual maupun disewakan di kota
-            Surabaya dengan mudah dan cepat.
+          <p className="mt-6 text-sm md:text-lg text-blue-800 leading-8">
+            Cari properti dijual maupun disewakan di kota Surabaya dengan mudah
+            dan cepat.
           </p>
         </div>
-        
+
         {/* <div className="mt-14 bg-white rounded-2xl shadow-xl p-6">
           <div className="grid lg:grid-cols-2 gap-5">
             <div className="flex items-center flex-1 px-6 gap-2">
@@ -38,7 +38,6 @@ function Headline() {
             </div>
           </div>
         </div> */}
-
       </div>
     </section>
   );

@@ -1,5 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
-import {ImagePlus, Plus, Trash2, Save, Home, MapPin, Zap, Ruler, FileText, Bed, Bath, Bookmark, ArrowLeft} from "lucide-react";
+import {
+  ImagePlus,
+  Plus,
+  Trash2,
+  Save,
+  Home,
+  MapPin,
+  Zap,
+  Ruler,
+  FileText,
+  Bed,
+  Bath,
+  Bookmark,
+  ArrowLeft,
+} from "lucide-react";
 import NavbarIntern from "./NavbarIntern";
 import { useNavigate } from "react-router-dom";
 import Footer from "./Footer";
@@ -34,7 +48,7 @@ function Promotion() {
 
   const [showNotif, setShowNotif] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -68,52 +82,48 @@ function Promotion() {
   };
 
   const handleSubmit = async () => {
-
-    if(isSubmittingRef.current) return;
+    if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
 
-    try{
+    try {
       const token = localStorage.getItem("token");
 
       const form = new FormData();
 
-      Object.keys(formData).forEach(key=>{
+      Object.keys(formData).forEach((key) => {
         form.append(key, formData[key]);
       });
 
-      images.forEach(img=>{
+      images.forEach((img) => {
         form.append("images", img);
       });
 
       form.append("deskripsi", JSON.stringify(deskripsi));
 
-      const response = await fetch(
-        "http://192.168.101.37:5000/promotion",
-        {
-          method:"POST",
-          headers:{
-              Authorization:`Bearer ${token}`
-          },
-          body:form
-        }
-      );
+      const response = await fetch("http://192.168.101.37:5000/promotion", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: form,
+      });
 
       const data = await response.json();
 
-      if(response.ok){
-          setShowConfirm(false);
-          setShowNotif(true);
-      }else{
-          alert(data.message);
+      if (response.ok) {
+        setShowConfirm(false);
+        setShowNotif(true);
+      } else {
+        alert(data.message);
       }
-    }catch(err){
-        console.log(err);
+    } catch (err) {
+      console.log(err);
     }
   };
 
   useEffect(() => {
     fetch(
-      "https://www.emsifa.com/api-wilayah-indonesia/api/districts/3578.json"
+      "https://www.emsifa.com/api-wilayah-indonesia/api/districts/3578.json",
     )
       .then((res) => res.json())
       .then((data) => setDistricts(data))
@@ -140,7 +150,7 @@ function Promotion() {
 
     try {
       const res = await fetch(
-        `https://www.emsifa.com/api-wilayah-indonesia/api/villages/${id}.json`
+        `https://www.emsifa.com/api-wilayah-indonesia/api/villages/${id}.json`,
       );
 
       const data = await res.json();
@@ -167,9 +177,7 @@ function Promotion() {
   }, []);
 
   useEffect(() => {
-    const pending = JSON.parse(
-      localStorage.getItem("pendingPromotionPayment")
-    );
+    const pending = JSON.parse(localStorage.getItem("pendingPromotionPayment"));
 
     const dataForm = pending?.formData ?? formData;
 
@@ -190,7 +198,7 @@ function Promotion() {
       JSON.stringify({
         formData,
         deskripsi,
-      })
+      }),
     );
 
     navigate("/payment");
@@ -204,20 +212,20 @@ function Promotion() {
   const handleGenerateQRIS = async () => {
     if (loadingQris) return;
     setLoadingQris(true);
-    try{
+    try {
       const token = localStorage.getItem("token");
       const res = await fetch(
         "http://192.168.101.37:5000/payment/generate-qris",
         {
-          method:"POST",
-          headers:{
-              "Content-Type":"application/json",
-              Authorization:`Bearer ${token}`
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          body:JSON.stringify({
-              amount:2500
-          })
-        }
+          body: JSON.stringify({
+            amount: 2500,
+          }),
+        },
       );
 
       const data = await res.json();
@@ -225,7 +233,7 @@ function Promotion() {
       // console.log("HTTP:", res.status);
       setLoadingQris(false);
 
-      if(!res.ok){
+      if (!res.ok) {
         alert(data.message);
         return;
       }
@@ -238,26 +246,26 @@ function Promotion() {
           qrImage: data.qrImage,
           formData,
           deskripsi,
-        })
+        }),
       );
       setShowConfirm(false);
       setShowQris(true);
       // console.log("Memulai polling");
       startCheckingPayment(data.partner_ref_no);
-    }catch(err){
+    } catch (err) {
       console.log(err);
       setLoadingQris(false);
       alert("Server Error");
     }
-  }
+  };
 
-  const startCheckingPayment = (partner_ref_no)=>{
+  const startCheckingPayment = (partner_ref_no) => {
     checkPayment(partner_ref_no);
-  }
-  
+  };
+
   const checkPayment = (partner_ref_no) => {
-    if(intervalRef.current){
-        return;
+    if (intervalRef.current) {
+      return;
     }
 
     const token = localStorage.getItem("token");
@@ -274,15 +282,14 @@ function Promotion() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         const data = await res.json();
 
         if (data.responseData?.qrisStatus === "PAID") {
-
-          if(paymentHandledRef.current) return;
-          paymentHandledRef.current=true;
+          if (paymentHandledRef.current) return;
+          paymentHandledRef.current = true;
 
           clearInterval(intervalRef.current);
           intervalRef.current = null;
@@ -292,14 +299,25 @@ function Promotion() {
 
           await handleSubmit();
         }
-
-      } catch(err){
+      } catch (err) {
         console.log(err);
       }
-
-    },3000);
+    }, 3000);
   };
 
+  const formatPrice = (value) => {
+    if (!value) return "";
+
+    return Number(value).toLocaleString("id-ID");
+  };
+  const handlePriceChange = (e) => {
+    const value = e.target.value.replace(/\D/g, "");
+
+    setFormData((prev) => ({
+      ...prev,
+      price: value,
+    }));
+  };
   return (
     <>
       <NavbarIntern />
@@ -316,15 +334,16 @@ function Promotion() {
           <h1 className="text-4xl font-bold text-blue-800 mb-10">
             Tambah Properti Baru
           </h1>
-          <form onSubmit={(e)=>{
-                e.preventDefault();
-                setShowConfirm(true);
-            }} className="space-y-10">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setShowConfirm(true);
+            }}
+            className="space-y-10"
+          >
             <div className="border-b border-slate-300 pb-8">
-              <h2 className="text-xl font-semibold mb-6">
-                Informasi Properti
-              </h2>
-              
+              <h2 className="text-xl font-semibold mb-6">Informasi Properti</h2>
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="font-medium block mb-2">
@@ -346,9 +365,7 @@ function Promotion() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="font-medium block mb-2">
-                      Kecamatan
-                    </label>
+                    <label className="font-medium block mb-2">Kecamatan</label>
 
                     <select
                       value={districtId}
@@ -366,9 +383,7 @@ function Promotion() {
                   </div>
 
                   <div>
-                    <label className="font-medium block mb-2">
-                        Kelurahan
-                    </label>
+                    <label className="font-medium block mb-2">Kelurahan</label>
 
                     <select
                       name="village"
@@ -390,9 +405,7 @@ function Promotion() {
               </div>
 
               <div className="mt-6">
-                <label className="font-medium block mb-2">
-                  Alamat
-                </label>
+                <label className="font-medium block mb-2">Alamat</label>
                 <input
                   name="address"
                   value={formData.address}
@@ -401,21 +414,18 @@ function Promotion() {
                 />
               </div>
               <div className="mt-6">
-                  <label className="font-medium block mb-2">
-                    Harga
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      placeholder="Rp 0"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleChange}
-                      onWheel={(e) => e.target.blur()}
-                      className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
-                    />
-                  </div>
+                <label className="font-medium block mb-2">Harga</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Rp 0,00"
+                    name="price"
+                    value={formatPrice(formData.price)}
+                    onChange={handlePriceChange}
+                    className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
+                  />
                 </div>
+              </div>
               <div className="grid md:grid-cols-2 gap-6 mt-6">
                 <div>
                   <label className="font-medium block mb-2">
@@ -433,9 +443,7 @@ function Promotion() {
                   </select>
                 </div>
                 <div>
-                  <label className="font-medium block mb-2">
-                    Kategori
-                  </label>
+                  <label className="font-medium block mb-2">Kategori</label>
                   <select
                     name="type"
                     value={formData.type}
@@ -449,9 +457,7 @@ function Promotion() {
               </div>
               <div className="grid md:grid-cols-3 gap-6 mt-6">
                 <div>
-                  <label className="font-medium block mb-2">
-                    Luas Tanah
-                  </label>
+                  <label className="font-medium block mb-2">Luas Tanah</label>
                   <div className="relative">
                     <Ruler
                       size={18}
@@ -487,9 +493,7 @@ function Promotion() {
                   </div>
                 </div>
                 <div>
-                  <label className="font-medium block mb-2">
-                    Listrik
-                  </label>
+                  <label className="font-medium block mb-2">Listrik</label>
                   <div className="relative">
                     <Zap
                       size={18}
@@ -509,9 +513,7 @@ function Promotion() {
 
               <div className="grid md:grid-cols-3 gap-6 mt-6">
                 <div>
-                  <label className="font-medium block mb-2">
-                    Kamar Tidur
-                  </label>
+                  <label className="font-medium block mb-2">Kamar Tidur</label>
                   <div className="relative">
                     <Bed
                       size={18}
@@ -528,9 +530,7 @@ function Promotion() {
                   </div>
                 </div>
                 <div>
-                  <label className="font-medium block mb-2">
-                    Kamar Mandi
-                  </label>
+                  <label className="font-medium block mb-2">Kamar Mandi</label>
                   <div className="relative">
                     <Bath
                       size={18}
@@ -547,9 +547,7 @@ function Promotion() {
                   </div>
                 </div>
                 <div>
-                  <label className="font-medium block mb-2">
-                    Sertifikat
-                  </label>
+                  <label className="font-medium block mb-2">Sertifikat</label>
                   <div className="relative">
                     <FileText
                       size={18}
@@ -568,19 +566,12 @@ function Promotion() {
             </div>
 
             <div className="border-b border-slate-300 pb-8">
-              <h2 className="text-xl font-semibold mb-6">
-                Foto Properti
-              </h2>
+              <h2 className="text-xl font-semibold mb-6">Foto Properti</h2>
               <div className="grid md:grid-cols-12 gap-8">
                 <div className="md:col-span-4">
                   <label className="cursor-pointer h-52 border-2 border-dashed border-blue-300 rounded-2xl bg-white flex flex-col justify-center items-center hover:bg-blue-50 transition">
-                    <ImagePlus
-                      size={45}
-                      className="text-blue-700"
-                    />
-                    <p className="mt-3 font-medium">
-                      Upload Foto
-                    </p>
+                    <ImagePlus size={45} className="text-blue-700" />
+                    <p className="mt-3 font-medium">Upload Foto</p>
                     <p className="text-sm text-gray-500">
                       Klik untuk memilih gambar
                     </p>
@@ -613,9 +604,7 @@ function Promotion() {
 
             <div>
               <div className="flex justify-between items-center mb-5">
-                <h2 className="text-xl font-semibold">
-                  Deskripsi
-                </h2>
+                <h2 className="text-xl font-semibold">Deskripsi</h2>
                 <button
                   type="button"
                   onClick={addDescription}
@@ -628,16 +617,11 @@ function Promotion() {
 
               <div className="space-y-4">
                 {deskripsi.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex gap-4"
-                  >
+                  <div key={index} className="flex gap-4">
                     <textarea
                       rows={3}
                       value={item}
-                      onChange={(e) =>
-                        changeDescription(index, e.target.value)
-                      }
+                      onChange={(e) => changeDescription(index, e.target.value)}
                       placeholder={`Deskripsi ${index + 1}`}
                       className="flex-1 rounded-lg border border-gray-300 p-4 resize-none"
                     />
@@ -660,120 +644,111 @@ function Promotion() {
                 type="submit"
                 className={`px-8 h-12 rounded-xl flex items-center gap-3 font-semibold text-white shadow-lg transition-all duration-300 cursor-pointer
                 ${
-                    exclusive===1
+                  exclusive === 1
                     ? "bg-blue-800 hover:bg-blue-900"
                     : "bg-green-600 hover:bg-green-700"
                 }`}
-            >
-                <Save size={18}/>
-                {exclusive===1
-                    ? "Simpan Properti"
-                    : "Bayar & Promosikan"}
-            </button>
+              >
+                <Save size={18} />
+                {exclusive === 1 ? "Simpan Properti" : "Bayar & Promosikan"}
+              </button>
             </div>
           </form>
         </div>
         {showConfirm && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl p-6 w-96 shadow-xl">
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 w-96 shadow-xl">
+              <h2 className="text-xl font-bold mb-3">
+                Apakah data yang anda masukkan sudah tepat?
+              </h2>
 
-                <h2 className="text-xl font-bold mb-3">
-                  Apakah data yang anda masukkan sudah tepat?
-                </h2>
+              <p className="text-sm text-red-500 mt-3">
+                Status ini tidak dapat dikembalikan.
+              </p>
 
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowConfirm(false);
+                  }}
+                  className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 cursor-pointer"
+                >
+                  Batal
+                </button>
 
-                <p className="text-sm text-red-500 mt-3">
-                  Status ini tidak dapat dikembalikan.
-                </p>
-
-                <div className="flex justify-end gap-3 mt-6">
-                  <button
-                    onClick={() => {
-                      setShowConfirm(false);
-                    }}
-                    className="px-5 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 cursor-pointer"
-                  >
-                    Batal
-                  </button>
-
-                 <button
-                    type="button"
-                    disabled={loadingQris || showQris}
-                    onClick={() => {
-                        if (exclusive === 1) {
-                            handleSubmit();
-                        } else {
-                            handleGenerateQRIS();
-                        }
-                    }}
-                    className={`px-6 py-2 rounded-lg text-white font-semibold transition-all duration-300 cursor-pointer
+                <button
+                  type="button"
+                  disabled={loadingQris || showQris}
+                  onClick={() => {
+                    if (exclusive === 1) {
+                      handleSubmit();
+                    } else {
+                      handleGenerateQRIS();
+                    }
+                  }}
+                  className={`px-6 py-2 rounded-lg text-white font-semibold transition-all duration-300 cursor-pointer
                     ${
                       loadingQris
                         ? "bg-gray-400 cursor-not-allowed"
-                        :
-                      exclusive === 1
+                        : exclusive === 1
                           ? "bg-blue-700 hover:bg-blue-800"
                           : "bg-green-600 hover:bg-green-700"
                     }`}
                 >
-                    {exclusive === 1 ? "Ya, Simpan" : "Bayar"}
-                </button>
-                </div>
-
-              </div>
-            </div>
-          )}
-          {showNotif && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
-                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-                  <Bookmark className="text-blue-800" size={34} />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-800 mt-5">
-                  Data Berhasil Disimpan
-                </h2>
-                <button
-                  onClick={() =>{
-                    setShowNotif(false);
-                    navigate("/dashboardIntern");} }
-                  className="mt-6 w-full h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-semibold cursor-pointer"
-                >
-                  OK
+                  {exclusive === 1 ? "Ya, Simpan" : "Bayar"}
                 </button>
               </div>
             </div>
-          )}
-          {showQris && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl p-8 w-[430px]">
-                <h2 className="text-2xl font-bold text-center">
-                    Pembayaran QRIS
-                </h2>
-                <p className="text-center text-gray-600 mt-2">
-                    Silakan scan QRIS berikut
-                </p>
-                <p className="text-center text-gray-500 mt-2">
-                    Bisa dengan melakukan screenshot jika menggunakan 1 device atau langsung scan dari layar.
-                </p>
-                <div className="flex justify-center mt-6">
-                  <img
-                      src={qrisData?.qrImage}
-                      className="w-72"
-                  />
-                </div>
-                <div className="mt-5 text-center">
-                    <div className="text-xl font-bold text-green-700">
-                        Rp15.000
-                    </div>
-                    <div className="text-sm text-gray-500 mt-2">
-                        Menunggu pembayaran...
-                    </div>
+          </div>
+        )}
+        {showNotif && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+                <Bookmark className="text-blue-800" size={34} />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mt-5">
+                Data Berhasil Disimpan
+              </h2>
+              <button
+                onClick={() => {
+                  setShowNotif(false);
+                  navigate("/dashboardIntern");
+                }}
+                className="mt-6 w-full h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-semibold cursor-pointer"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        )}
+        {showQris && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 w-[430px]">
+              <h2 className="text-2xl font-bold text-center">
+                Pembayaran QRIS
+              </h2>
+              <p className="text-center text-gray-600 mt-2">
+                Silakan scan QRIS berikut
+              </p>
+              <p className="text-center text-gray-500 mt-2">
+                Bisa dengan melakukan screenshot jika menggunakan 1 device atau
+                langsung scan dari layar.
+              </p>
+              <div className="flex justify-center mt-6">
+                <img src={qrisData?.qrImage} className="w-72" />
+              </div>
+              <div className="mt-5 text-center">
+                <div className="text-xl font-bold text-green-700">Rp15.000</div>
+                <div className="text-sm text-gray-500 mt-2">
+                  Menunggu pembayaran...
                 </div>
               </div>
             </div>
-            )}
+          </div>
+        )}
       </div>
-      <Footer/>
+      <Footer />
     </>
   );
 }
