@@ -24,9 +24,10 @@ dotenv.config();
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const authenticateToken = require('./auth');
+const authenticateToken = require("./auth");
+const sharp = require("sharp");
 
-app.use('/uploads', express.static('uploads'));
+app.use("/uploads", express.static("uploads"));
 const multer = require("multer");
 const path = require("path");
 
@@ -46,62 +47,71 @@ async function getToken() {
   const { data } = await axios.post(
     "https://trr08-api.rukuntetangga.net/qris-loket-grup/get_token.php",
     {
-        kodeLoket,
-        apiKey,
-        clientSecret
-    }
+      kodeLoket,
+      apiKey,
+      clientSecret,
+    },
   );
   return data.token;
 }
 app.get("/", (req, res) => {
-    res.send("Backend berhasil berjalan!");
+  res.send("Backend berhasil berjalan!");
 });
 
-app.post('/register', (req, res) => {
+app.post("/register", (req, res) => {
   const { username, password, name, city, phone_number, email } = req.body;
-  db.query('SELECT * FROM akuns WHERE username=?', [username], async (err, result) => {
-    if (err) return res.status(500).json({ message: 'Server error' });
+  db.query(
+    "SELECT * FROM akuns WHERE username=?",
+    [username],
+    async (err, result) => {
+      if (err) return res.status(500).json({ message: "Server error" });
 
-    if (result.length > 0) {
-      return res.status(400).json({ message: 'Error' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    db.query(
-      'INSERT INTO akuns (username, password, name, city, phone_number, email, exclusive) VALUES (?, ?, ?, ?, ?, ?, 0)',
-      [username, hashedPassword, name, city, phone_number, email],
-      (err) => {
-        if (err) return res.status(500).json({ message: 'Error registering user' });
-        res.status(201).json({ message: 'User registered successfully' });
+      if (result.length > 0) {
+        return res.status(400).json({ message: "Error" });
       }
-    );
-  });
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      db.query(
+        "INSERT INTO akuns (username, password, name, city, phone_number, email, exclusive) VALUES (?, ?, ?, ?, ?, ?, 0)",
+        [username, hashedPassword, name, city, phone_number, email],
+        (err) => {
+          if (err)
+            return res.status(500).json({ message: "Error registering user" });
+          res.status(201).json({ message: "User registered successfully" });
+        },
+      );
+    },
+  );
 });
 
-
-app.post('/login', (req, res) => {
+app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  db.query('SELECT * FROM akuns WHERE username = ?', [username], async (err, result) => {
-    if (err) return res.status(500).json({ message: 'Server error' });
+  db.query(
+    "SELECT * FROM akuns WHERE username = ?",
+    [username],
+    async (err, result) => {
+      if (err) return res.status(500).json({ message: "Server error" });
 
-    if (result.length === 0) {
-      return res.status(400).json({ message: 'User not found' });
-    }
+      if (result.length === 0) {
+        return res.status(400).json({ message: "User not found" });
+      }
 
-    const user = result[0];
-    const isMatch = await bcrypt.compare(password, user.password);
+      const user = result[0];
+      const isMatch = await bcrypt.compare(password, user.password);
 
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+      if (!isMatch)
+        return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-    expiresIn: '4h',
-    });
-    res.json({ message: 'Login successful', token});
-  });
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+        expiresIn: "4h",
+      });
+      res.json({ message: "Login successful", token });
+    },
+  );
 });
 
-app.post('/logout', (req, res) => {
-  res.json({ message: 'Logout successful (JWT)' });
+app.post("/logout", (req, res) => {
+  res.json({ message: "Logout successful (JWT)" });
 });
 
 app.get("/checklogin", authenticateToken, (req, res) => {
@@ -120,9 +130,9 @@ const storage = multer.diskStorage({
     cb(
       null,
       Date.now() +
-      "-" +
-      Math.round(Math.random() * 1E9) +
-      path.extname(file.originalname)
+        "-" +
+        Math.round(Math.random() * 1e9) +
+        path.extname(file.originalname),
     );
   },
 });
@@ -131,12 +141,54 @@ const upload = multer({
   storage,
 });
 
+// const compressImages = async (req, res, next) => {
+//   if (!req.files?.length) {
+//     return next();
+//   }
+
+//   try {
+//     for (const file of req.files) {
+//       const filePath = path.join(__dirname, "uploads", file.filename);
+
+//       console.log(filePath);
+
+//       const buffer = await sharp(filePath)
+//         .rotate()
+//         .resize({
+//           width: 1600,
+//           withoutEnlargement: true,
+//         })
+//         .jpeg({
+//           quality: 75,
+//           mozjpeg: true,
+//         })
+//         .toBuffer();
+
+//       await fs.promises.writeFile(filePath, buffer);
+//     }
+
+//     next();
+
+//     next();
+//   } catch (err) {
+//     console.error(err);
+//     return res.status(500).json({
+//       message: "Gagal mengompres gambar",
+//     });
+//   }
+// };
+
 app.post(
   "/promotion",
   authenticateToken,
   upload.array("images", 10),
+  //  (req, res, next) => {
+  //   console.log(req.files);
+  //   next();
+  // },
+  // compressImages,
   (req, res) => {
-     if (!req.files || req.files.length > 10) {
+    if (!req.files || req.files.length > 10) {
       return res.status(400).json({
         message: "Maksimal upload 10 gambar.",
       });
@@ -163,9 +215,9 @@ app.post(
       sertifikat,
       deskripsi,
       created_at,
-      status
+      status,
     } = req.body;
-    const imagePaths = req.files.map(file => file.filename);
+    const imagePaths = req.files.map((file) => file.filename);
     db.query(
       `INSERT INTO properties
       (
@@ -219,31 +271,33 @@ app.post(
         JSON.stringify(imagePaths),
         deskripsi,
         created_at,
-        status
+        status,
       ],
-      (err,result)=>{
-        if(err){
+      (err, result) => {
+        if (err) {
           console.log(err);
           return res.status(500).json({
-            message:"Gagal menyimpan data"
+            message: "Gagal menyimpan data",
           });
         }
         res.json({
-          message:"Berhasil menambah properti"
+          message: "Berhasil menambah properti",
         });
-      }
+      },
     );
-  }
+  },
 );
 
 app.delete("/properties/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [rows] = await db.promise().query(
-      "SELECT images FROM properties WHERE id=? AND userId=?",
-      [id, req.userId]
-    );
+    const [rows] = await db
+      .promise()
+      .query("SELECT images FROM properties WHERE id=? AND userId=?", [
+        id,
+        req.userId,
+      ]);
 
     if (rows.length === 0) {
       return res.status(404).json({
@@ -260,15 +314,16 @@ app.delete("/properties/:id", authenticateToken, async (req, res) => {
       }
     });
 
-    await db.promise().query(
-      "DELETE FROM properties WHERE id=? AND userId=?",
-      [id, req.userId]
-    );
+    await db
+      .promise()
+      .query("DELETE FROM properties WHERE id=? AND userId=?", [
+        id,
+        req.userId,
+      ]);
 
     res.json({
       message: "Properti berhasil dihapus",
     });
-
   } catch (err) {
     console.log(err);
     res.status(500).json({
@@ -281,6 +336,7 @@ app.put(
   "/property/:id",
   authenticateToken,
   upload.array("images", 10),
+  // compressImages,
   (req, res) => {
     const {
       name,
@@ -396,11 +452,11 @@ app.put(
             res.json({
               message: "Properti berhasil diperbarui",
             });
-          }
+          },
         );
-      }
+      },
     );
-  }
+  },
 );
 
 app.get("/properties", authenticateToken, (req, res) => {
@@ -438,7 +494,7 @@ app.get("/properties", authenticateToken, (req, res) => {
       }));
 
       res.json(data);
-    }
+    },
   );
 });
 
@@ -468,7 +524,7 @@ app.put("/properties/:id/reactivate", authenticateToken, (req, res) => {
       res.json({
         message: "Promosi berhasil diaktifkan kembali",
       });
-    }
+    },
   );
 });
 
@@ -496,7 +552,7 @@ app.put("/properties/:id/sold", authenticateToken, (req, res) => {
       res.json({
         message: "Properti berhasil ditandai sebagai laku",
       });
-    }
+    },
   );
 });
 
@@ -529,7 +585,7 @@ app.get("/propertiesAll", (req, res) => {
       }));
 
       res.json(data);
-    }
+    },
   );
 });
 
@@ -561,7 +617,7 @@ app.get("/properties/sale", (req, res) => {
       }));
 
       res.json(data);
-    }
+    },
   );
 });
 
@@ -593,7 +649,7 @@ app.get("/properties/rent", (req, res) => {
       }));
 
       res.json(data);
-    }
+    },
   );
 });
 
@@ -629,24 +685,24 @@ app.get("/property/:id", (req, res) => {
         images: JSON.parse(item.images || "[]"),
         deskripsi: JSON.parse(item.deskripsi || "[]"),
       });
-    }
+    },
   );
 });
 
 app.get("/exclusive", authenticateToken, (req, res) => {
-    db.query(
-        "SELECT id, name, exclusive FROM akuns WHERE id=?",
-        [req.userId],
-        (err, result) => {
-            if (err) return res.sendStatus(500);
+  db.query(
+    "SELECT id, name, exclusive FROM akuns WHERE id=?",
+    [req.userId],
+    (err, result) => {
+      if (err) return res.sendStatus(500);
 
-            res.json(result[0]);
-        }
-    );
+      res.json(result[0]);
+    },
+  );
 });
 
-app.post("/payment/generate-qris", authenticateToken, async (req,res)=>{
-  try{
+app.post("/payment/generate-qris", authenticateToken, async (req, res) => {
+  try {
     const { amount, propertyId } = req.body;
     const token = await getToken();
     const random = Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -655,30 +711,25 @@ app.post("/payment/generate-qris", authenticateToken, async (req,res)=>{
     const { data } = await axios.post(
       "https://trr08-api.rukuntetangga.net/qris-loket-grup/generate_qris.php",
       {
-          amount: paymentAmount,
-          partner_ref_no,
-          bankCode: "BMRI",
-          bankAccount: "1400025570020"
+        amount: paymentAmount,
+        partner_ref_no,
+        bankCode: "BMRI",
+        bankAccount: "1400025570020",
       },
       {
-          headers:{
-              Authorization:`Bearer ${token}`
-          }
-      }
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
     );
     await query(
-    `
+      `
     INSERT INTO payments
     (user_id, property_id, partner_ref_no, amount, status)
     VALUES (?,?,?,?,?)
     `,
-    [
-        req.userId,
-        propertyId,
-        partner_ref_no,
-        amount,
-        "PENDING"
-    ]);
+      [req.userId, propertyId, partner_ref_no, amount, "PENDING"],
+    );
     console.log(JSON.stringify(data, null, 2));
     console.log(partner_ref_no);
     console.log(partner_ref_no.length);
@@ -689,53 +740,56 @@ app.post("/payment/generate-qris", authenticateToken, async (req,res)=>{
     const qrImage = await QRCode.toDataURL(qr.qrContent);
 
     res.json({
-        qrImage,
-        partner_ref_no
+      qrImage,
+      partner_ref_no,
     });
-  }catch(err){
+  } catch (err) {
     console.log(err.response?.data || err.message);
     res.status(500).json({
-        message:"Generate QR gagal"
+      message: "Generate QR gagal",
     });
   }
 });
 
-app.get("/payment/query/:partner_ref_no", authenticateToken, async (req, res) => {
-  try {
-    const token = await getToken();
+app.get(
+  "/payment/query/:partner_ref_no",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const token = await getToken();
 
-    const { data } = await axios.post(
-      "https://trr08-api.rukuntetangga.net/qris-loket-grup/query_qris.php",
-      {
-        kodeLoket,
-        apiKey,
-        clientSecret,
-        partner_ref_no: req.params.partner_ref_no
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
+      const { data } = await axios.post(
+        "https://trr08-api.rukuntetangga.net/qris-loket-grup/query_qris.php",
+        {
+          kodeLoket,
+          apiKey,
+          clientSecret,
+          partner_ref_no: req.params.partner_ref_no,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-    console.log(JSON.stringify(data, null, 2));
+      console.log(JSON.stringify(data, null, 2));
 
-    const result = JSON.parse(data.response.body);
+      const result = JSON.parse(data.response.body);
 
-    if(result.responseData?.qrisStatus === "PAID"){
-
-    await query(
-      `
+      if (result.responseData?.qrisStatus === "PAID") {
+        await query(
+          `
       UPDATE payments
       SET
           status='PAID'
       WHERE partner_ref_no=?
       `,
-      [req.params.partner_ref_no]);
+          [req.params.partner_ref_no],
+        );
 
-      await query(
-      `
+        await query(
+          `
       UPDATE properties
       SET
           created_at=NOW(),
@@ -746,37 +800,36 @@ app.get("/payment/query/:partner_ref_no", authenticateToken, async (req, res) =>
           WHERE partner_ref_no=?
       )
       `,
-      [req.params.partner_ref_no]);
+          [req.params.partner_ref_no],
+        );
+      }
+
+      res.json(result);
+    } catch (err) {
+      console.log(err.response?.data || err.message);
+
+      res.status(500).json({
+        message: "Query pembayaran gagal",
+      });
     }
+  },
+);
 
-    res.json(result);
+app.post("/payment/callback", async (req, res) => {
+  const { partner_ref_no, qrisStatus } = req.body;
 
-  } catch (err) {
-    console.log(err.response?.data || err.message);
-
-    res.status(500).json({
-      message: "Query pembayaran gagal"
-    });
-  }
-});
-
-app.post("/payment/callback", async(req,res)=>{
-  const {
-      partner_ref_no,
-      qrisStatus
-  } = req.body;
-
-  if(qrisStatus==="PAID"){
+  if (qrisStatus === "PAID") {
     await query(
-    `
+      `
     UPDATE payments
     SET status='PAID'
     WHERE partner_ref_no=?
     `,
-    [partner_ref_no]);
+      [partner_ref_no],
+    );
 
     await query(
-    `
+      `
     UPDATE properties
     SET status=0
     WHERE id=(
@@ -785,7 +838,8 @@ app.post("/payment/callback", async(req,res)=>{
         WHERE partner_ref_no=?
     )
     `,
-    [partner_ref_no]);
+      [partner_ref_no],
+    );
   }
   res.sendStatus(200);
 });
@@ -819,17 +873,12 @@ app.get("/profile", authenticateToken, (req, res) => {
       }
 
       res.json(result[0]);
-    }
+    },
   );
 });
 
 app.put("/profile", authenticateToken, (req, res) => {
-  const {
-    name,
-    phone_number,
-    email,
-    city
-  } = req.body;
+  const { name, phone_number, email, city } = req.body;
 
   db.query(
     `
@@ -841,53 +890,42 @@ app.put("/profile", authenticateToken, (req, res) => {
       city=?
     WHERE id=?
     `,
-    [
-      name,
-      phone_number,
-      email,
-      city,
-      req.userId
-    ],
+    [name, phone_number, email, city, req.userId],
     (err) => {
-      if(err){
+      if (err) {
         console.log(err);
 
         return res.status(500).json({
-          message:"Gagal mengupdate profile"
+          message: "Gagal mengupdate profile",
         });
       }
 
       res.json({
-        message:"Profile berhasil diperbarui"
+        message: "Profile berhasil diperbarui",
       });
-    }
+    },
   );
 });
 
 app.post("/profile/check-password", authenticateToken, (req, res) => {
-
   db.query(
     "SELECT password FROM akuns WHERE id=?",
     [req.userId],
     async (err, result) => {
-
       if (err) return res.sendStatus(500);
 
-      const match = await bcrypt.compare(
-        req.body.password,
-        result[0].password
-      );
+      const match = await bcrypt.compare(req.body.password, result[0].password);
 
       if (!match) {
         return res.status(400).json({
-            message: "Password lama salah."
+          message: "Password lama salah.",
         });
       }
 
       res.json({
-        message: "OK"
+        message: "OK",
       });
-    }
+    },
   );
 });
 
@@ -900,14 +938,14 @@ app.put("/profile/change-password", authenticateToken, async (req, res) => {
       if (err) return res.sendStatus(500);
 
       res.json({
-        message: "Password berhasil diubah."
+        message: "Password berhasil diubah.",
       });
-    }
+    },
   );
 });
 
 const PORT = 5000;
 
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server berjalan di http://localhost:${PORT}`);
+  console.log(`Server berjalan di http://localhost:${PORT}`);
 });

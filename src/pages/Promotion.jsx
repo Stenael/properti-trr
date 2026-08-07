@@ -56,6 +56,7 @@ function Promotion() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [missingFields, setMissingFields] = useState([]);
+  const [saving, setSaving] = useState(false);
 
   const validateForm = () => {
     const missing = [];
@@ -125,6 +126,9 @@ function Promotion() {
   };
 
   const handleSubmit = async () => {
+    if (saving) return;
+
+    setSaving(true);
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
 
@@ -155,7 +159,7 @@ function Promotion() {
 
       if (response.ok) {
         localStorage.removeItem("promotionDraft");
-        
+
         setShowConfirm(false);
         setShowNotif(true);
       } else {
@@ -163,6 +167,9 @@ function Promotion() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      setSaving(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -929,7 +936,7 @@ function Promotion() {
 
                 <button
                   type="button"
-                  disabled={loadingQris || showQris}
+                  disabled={exclusive === 1 ? saving : loadingQris || showQris}
                   onClick={() => {
                     if (exclusive === 1) {
                       handleSubmit();
@@ -937,16 +944,22 @@ function Promotion() {
                       handleGenerateQRIS();
                     }
                   }}
-                  className={`px-6 py-2 rounded-lg text-white font-semibold transition-all duration-300 cursor-pointer
-                    ${
-                      loadingQris
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : exclusive === 1
-                          ? "bg-blue-700 hover:bg-blue-800"
-                          : "bg-green-600 hover:bg-green-700"
-                    }`}
+                  className={`px-6 py-2 rounded-lg text-white font-semibold transition-all duration-300
+                  ${
+                    (exclusive === 1 && saving) || (exclusive !== 1 && loadingQris)
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : exclusive === 1
+                        ? "bg-blue-700 hover:bg-blue-800 cursor-pointer"
+                        : "bg-green-600 hover:bg-green-700 cursor-pointer"
+                  }`}
                 >
-                  {exclusive === 1 ? "Ya, Simpan" : "Bayar"}
+                  {exclusive === 1
+                    ? saving
+                      ? "Menyimpan..."
+                      : "Ya, Simpan"
+                    : loadingQris
+                      ? "Membuat QRIS..."
+                      : "Bayar"}
                 </button>
               </div>
             </div>
