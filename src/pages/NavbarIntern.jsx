@@ -8,7 +8,7 @@ function NavbarIntern() {
 
   const handleLogout = async () => {
     try {
-      await fetch("http://192.168.101.37:5000/logout", {
+      await fetch(`${import.meta.env.VITE_API_URL}/logout`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

@@ -47,7 +47,7 @@ function DashboardIntern() {
   const fetchProperties = async () => {
     const token = localStorage.getItem("token");
 
-    const res = await fetch("http://192.168.101.37:5000/properties", {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/properties`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -106,7 +106,7 @@ function DashboardIntern() {
     const token = localStorage.getItem("token");
 
     const res = await fetch(
-      `http://192.168.101.37:5000/properties/${id}/reactivate`,
+      `${import.meta.env.VITE_API_URL}/properties/${id}/reactivate`,
       {
         method: "PUT",
         headers: {
@@ -137,7 +137,7 @@ function DashboardIntern() {
     const token = localStorage.getItem("token");
 
     const res = await fetch(
-      `http://192.168.101.37:5000/properties/${selectedProperty.id}/sold`,
+      `${import.meta.env.VITE_API_URL}/properties/${selectedProperty.id}/sold`,
       {
         method: "PUT",
         headers: {
@@ -211,7 +211,7 @@ function DashboardIntern() {
       setLoadingQris(true);
       const token = localStorage.getItem("token");
       const res = await fetch(
-        "http://192.168.101.37:5000/payment/generate-qris",
+        `${import.meta.env.VITE_API_URL}/payment/generate-qris`,
         {
           method: "POST",
           headers: {
@@ -260,7 +260,7 @@ function DashboardIntern() {
     const token = localStorage.getItem("token");
     const interval = setInterval(async () => {
       const res = await fetch(
-        `http://192.168.101.37:5000/payment/query/${partner_ref_no}`,
+       `${import.meta.env.VITE_API_URL}/payment/query/${partner_ref_no}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -298,7 +298,7 @@ function DashboardIntern() {
 
     try {
       const res = await fetch(
-        `http://192.168.101.37:5000/properties/${selectedDelete.id}`,
+        `${import.meta.env.VITE_API_URL}/properties/${selectedDelete.id}`,
         {
           method: "DELETE",
           headers: {
@@ -510,7 +510,7 @@ function DashboardIntern() {
                 >
                   <img
                     onClick={() => navigate(`/property/${item.id}`)}
-                    src={`http://192.168.101.37:5000/uploads/${item.images[0]}`}
+                    src={`${import.meta.env.VITE_API_URL}/uploads/${item.images[0]}`}
                     className="w-full h-60 object-cover cursor-pointer"
                     alt=""
                   />

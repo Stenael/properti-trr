@@ -22,7 +22,7 @@ function DashboardPublic() {
   const [properties, setProperties] = useState([]);
 
   useEffect(() => {
-    fetch("http://192.168.101.37:5000/propertiesAll")
+    fetch(`${import.meta.env.VITE_API_URL}/propertiesAll`)
       .then((res) => res.json())
       .then((data) => setProperties(data))
       .catch((err) => console.log(err));
@@ -73,7 +73,7 @@ function DashboardPublic() {
             >
               <div className="relative">
                 <img
-                  src={`http://192.168.101.37:5000/uploads/${
+                  src={`${import.meta.env.VITE_API_URL}/uploads/${
                     item.images[currentImage[item.id] || 0]
                   }`}
                   alt={item.name}

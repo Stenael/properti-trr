@@ -14,7 +14,7 @@ function Navbar() {
       return;
     }
 
-    const res = await fetch("http://192.168.101.37:5000/checklogin", {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/checklogin`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

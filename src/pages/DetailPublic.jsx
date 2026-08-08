@@ -24,7 +24,7 @@ function DetailPublic() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`http://192.168.101.37:5000/property/${id}`)
+    fetch(`${import.meta.env.VITE_API_URL}/property/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setProperty(data);
@@ -60,7 +60,7 @@ function DetailPublic() {
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 order-1">
             <img
-              src={`http://192.168.101.37:5000/uploads/${mainImage}`}
+              src={`${import.meta.env.VITE_API_URL}/uploads/${mainImage}`}
               onClick={() => setShowImage(true)}
               className="w-full h-[280px] md:h-[600px] rounded-2xl object-cover shadow cursor-pointer"
             />
@@ -70,7 +70,7 @@ function DetailPublic() {
               {property.images.map((img, index) => (
                 <img
                   key={index}
-                  src={`http://192.168.101.37:5000/uploads/${img}`}
+                  src={`${import.meta.env.VITE_API_URL}/uploads/${img}`}
                   onClick={() => setMainImage(img)}
                   className={`h-28 w-28 rounded-xl object-cover cursor-pointer border-4 ${
                     mainImage === img ? "border-blue-700" : "border-transparent"
@@ -232,7 +232,7 @@ function DetailPublic() {
           className="fixed inset-0 bg-black/80 flex justify-center items-center z-50"
         >
           <img
-            src={`http://192.168.101.37:5000/uploads/${mainImage}`}
+            src={`${import.meta.env.VITE_API_URL}/uploads/${mainImage}`}
             className="max-h-[90vh] max-w-[90vw] rounded-xl"
           />
         </div>

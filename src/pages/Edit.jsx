@@ -25,6 +25,8 @@ function Edit() {
   const [districts, setDistricts] = useState([]);
   const [villages, setVillages] = useState([]);
   const [districtId, setDistrictId] = useState("");
+  const [showKtPlus, setShowKtPlus] = useState(false);
+  const [showKmPlus, setShowKmPlus] = useState(false);
 
   const [showNotif, setShowNotif] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -34,14 +36,20 @@ function Edit() {
     address: "",
     village: "",
     district: "",
-    building: "",
+    building: "Rumah",
+    priceType: "global",
     price: "",
+    pricePerMeter: "",
+    length: "",
+    width: "",
     luasTanah: "",
     luasBangunan: "",
     listrik: "",
-    type: "",
+    type: "Dijual",
     kt: "",
+    ktPlus: "",
     km: "",
+    kmPlus: "",
     sertifikat: "",
     deskripsi: [],
   });
@@ -49,7 +57,7 @@ function Edit() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    fetch(`http://192.168.101.37:5000/property/${id}`, {
+    fetch(`${import.meta.env.VITE_API_URL}/property/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -61,19 +69,27 @@ function Edit() {
           address: data.address || "",
           village: data.village || "",
           district: data.district || "",
-          building: data.building || "",
+          building: data.building || "Rumah",
+          priceType: data.price_type || "global",
           price: data.price || "",
+          pricePerMeter: data.price_perMeter || "",
+          length: data.length || "",
+          width: data.width || "",
           luasTanah: data.luasTanah || "",
           luasBangunan: data.luasBangunan || "",
           listrik: data.listrik || "",
-          type: data.type || "",
+          type: data.type || "Dijual",
           kt: data.kt || "",
+          ktPlus: data.kt_plus || "",
           km: data.km || "",
+          kmPlus: data.km_plus || "",
           sertifikat: data.sertifikat || "",
         });
 
         setDeskripsi(data.deskripsi || []);
         setImages(data.images || []);
+        setShowKtPlus(!!data.ktPlus);
+        setShowKmPlus(!!data.kmPlus);
       });
   }, []);
 
@@ -122,7 +138,7 @@ function Edit() {
   const handleSubmit = async () => {
     const token = localStorage.getItem("token");
 
-    const res = await fetch(`http://192.168.101.37:5000/property/${id}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/property/${id}`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -148,6 +164,18 @@ function Edit() {
       .then((data) => setDistricts(data))
       .catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (!districts.length || !formData.district) return;
+
+    const selectedDistrict = districts.find(
+      (item) => item.name.toLowerCase() === formData.district.toLowerCase(),
+    );
+
+    if (selectedDistrict) {
+      setDistrictId(selectedDistrict.id);
+    }
+  }, [districts, formData.district]);
 
   const handleDistrictChange = async (e) => {
     const id = e.target.value;
@@ -178,6 +206,43 @@ function Edit() {
       console.log(err);
     }
   };
+
+  useEffect(() => {
+    if (!districtId) return;
+
+    fetch(
+      `https://www.emsifa.com/api-wilayah-indonesia/api/villages/${districtId}.json`,
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        setVillages(data);
+      })
+      .catch(console.error);
+  }, [districtId]);
+
+  const formatPrice = (value) => {
+    if (!value) return "";
+
+    return Number(value).toLocaleString("id-ID");
+  };
+
+  const handlePriceChange = (e) => {
+    const value = e.target.value.replace(/\D/g, "");
+
+    setFormData((prev) => ({
+      ...prev,
+      price: value,
+    }));
+  };
+
+  useEffect(() => {
+    if (formData.length && formData.width) {
+      setFormData((prev) => ({
+        ...prev,
+        luasTanah: Number(prev.length) * Number(prev.width),
+      }));
+    }
+  }, [formData.length, formData.width]);
 
   return (
     <>
@@ -275,18 +340,49 @@ function Edit() {
                 />
               </div>
               <div className="mt-6">
-                <label className="font-medium block mb-2">Harga</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    placeholder="Rp 0"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleChange}
-                    onWheel={(e) => e.target.blur()}
-                    className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
-                  />
-                </div>
+                <label className="font-medium block mb-2">Jenis Harga</label>
+
+                <select
+                  name="priceType"
+                  value={formData.priceType}
+                  onChange={handleChange}
+                  className="w-full h-12 rounded-lg border border-gray-300 px-4 cursor-pointer"
+                >
+                  <option value="global">Harga Global</option>
+                  <option value="perMeter">Harga per m²</option>
+                </select>
+              </div>
+
+              <div className="mt-6">
+                <label className="font-medium block mb-2">
+                  {formData.priceType === "global" ? "Harga" : "Harga / m²"}
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="Rp. 0,00"
+                  value={
+                    formData.priceType === "global"
+                      ? formatPrice(formData.price)
+                      : formatPrice(formData.pricePerMeter)
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+
+                    if (formData.priceType === "global") {
+                      setFormData((prev) => ({
+                        ...prev,
+                        price: value,
+                      }));
+                    } else {
+                      setFormData((prev) => ({
+                        ...prev,
+                        pricePerMeter: value,
+                      }));
+                    }
+                  }}
+                  className="w-full h-12 rounded-lg border border-gray-300 px-4"
+                />
               </div>
               <div className="grid md:grid-cols-2 gap-6 mt-6">
                 <div>
@@ -297,7 +393,7 @@ function Edit() {
                     name="building"
                     value={formData.building}
                     onChange={handleChange}
-                    className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
+                    className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none cursor-pointer"
                   >
                     <option>Rumah</option>
                     <option>Ruko</option>
@@ -310,40 +406,78 @@ function Edit() {
                     name="type"
                     value={formData.type}
                     onChange={handleChange}
-                    className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
+                    className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none cursor-pointer"
                   >
                     <option>Dijual</option>
                     <option>Disewa</option>
                   </select>
                 </div>
               </div>
-              <div className="grid md:grid-cols-3 gap-6 mt-6">
+              <div className="grid md:grid-cols-4 gap-6 mt-6">
+                <div>
+                  <label className="font-medium block mb-2">
+                    Dimensi Tanah
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      name="length"
+                      placeholder="Panjang"
+                      value={formData.length}
+                      onChange={handleChange}
+                      onWheel={(e) => e.target.blur()}
+                      className="w-full h-12 rounded-lg border border-gray-300 px-4"
+                    />
+
+                    <span className="font-semibold">×</span>
+
+                    <input
+                      type="number"
+                      name="width"
+                      placeholder="Lebar"
+                      value={formData.width}
+                      onChange={handleChange}
+                      onWheel={(e) => e.target.blur()}
+                      className="w-full h-12 rounded-lg border border-gray-300 px-4"
+                    />
+
+                    <span className="text-gray-500">m</span>
+                  </div>
+                </div>
+
                 <div>
                   <label className="font-medium block mb-2">Luas Tanah</label>
-                  <div className="relative">
+
+                  <div className="relative flex flex-row items-center gap-2">
                     <Ruler
                       size={18}
                       className="absolute left-4 top-4 text-gray-400"
                     />
+
                     <input
-                      type="double"
+                      type="text"
                       name="luasTanah"
                       value={formData.luasTanah}
-                      onChange={handleChange}
-                      onWheel={(e) => e.target.blur()}
-                      className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
+                      readOnly
+                      className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4 bg-gray-50"
                     />
+
+                    <p className="text-gray-500">m²</p>
                   </div>
                 </div>
+
                 <div>
                   <label className="font-medium block mb-2">
                     Luas Bangunan
                   </label>
-                  <div className="relative">
+
+                  <div className="relative flex flex-row items-center gap-2">
                     <Ruler
                       size={18}
                       className="absolute left-4 top-4 text-gray-400"
                     />
+
                     <input
                       type="number"
                       name="luasBangunan"
@@ -352,15 +486,20 @@ function Edit() {
                       onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
                     />
+
+                    <p className="text-gray-500">m²</p>
                   </div>
                 </div>
+
                 <div>
                   <label className="font-medium block mb-2">Listrik</label>
-                  <div className="relative">
+
+                  <div className="relative flex flex-row items-center gap-2">
                     <Zap
                       size={18}
                       className="absolute left-4 top-4 text-gray-400"
                     />
+
                     <input
                       type="number"
                       name="listrik"
@@ -369,6 +508,8 @@ function Edit() {
                       onWheel={(e) => e.target.blur()}
                       className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
                     />
+
+                    <p className="text-gray-500">Watt</p>
                   </div>
                 </div>
               </div>
@@ -376,45 +517,79 @@ function Edit() {
               <div className="grid md:grid-cols-3 gap-6 mt-6">
                 <div>
                   <label className="font-medium block mb-2">Kamar Tidur</label>
-                  <div className="relative">
-                    <Bed
-                      size={18}
-                      className="absolute left-4 top-4 text-gray-400"
-                    />
+
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-1">
+                      <Bed
+                        size={18}
+                        className="absolute left-4 top-4 text-gray-400"
+                      />
+
+                      <input
+                        type="number"
+                        name="kt"
+                        value={formData.kt}
+                        onChange={handleChange}
+                        onWheel={(e) => e.target.blur()}
+                        className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
+                      />
+                    </div>
+
+                    <span className="font-bold text-lg">+</span>
+
                     <input
                       type="number"
-                      name="kt"
-                      value={formData.kt}
+                      name="ktPlus"
+                      value={formData.ktPlus}
                       onChange={handleChange}
                       onWheel={(e) => e.target.blur()}
-                      className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
+                      className="w-20 h-12 rounded-lg border border-gray-300 text-center"
                     />
                   </div>
                 </div>
+
                 <div>
                   <label className="font-medium block mb-2">Kamar Mandi</label>
-                  <div className="relative">
-                    <Bath
-                      size={18}
-                      className="absolute left-4 top-4 text-gray-400"
-                    />
+
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex-1">
+                      <Bath
+                        size={18}
+                        className="absolute left-4 top-4 text-gray-400"
+                      />
+
+                      <input
+                        type="number"
+                        name="km"
+                        value={formData.km}
+                        onChange={handleChange}
+                        onWheel={(e) => e.target.blur()}
+                        className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
+                      />
+                    </div>
+
+                    <span className="font-bold text-lg">+</span>
+
                     <input
                       type="number"
-                      name="km"
-                      value={formData.km}
+                      name="kmPlus"
+                      value={formData.kmPlus}
                       onChange={handleChange}
                       onWheel={(e) => e.target.blur()}
-                      className="w-full h-12 rounded-lg border border-gray-300 pl-12 px-4"
+                      className="w-20 h-12 rounded-lg border border-gray-300 text-center"
                     />
                   </div>
                 </div>
+
                 <div>
                   <label className="font-medium block mb-2">Sertifikat</label>
+
                   <div className="relative">
                     <FileText
                       size={18}
                       className="absolute left-4 top-4 text-gray-400"
                     />
+
                     <input
                       type="text"
                       name="sertifikat"
@@ -457,7 +632,7 @@ function Edit() {
                         src={
                           img instanceof File
                             ? URL.createObjectURL(img)
-                            : `http://192.168.101.37:5000/uploads/${img}`
+                            : `${import.meta.env.VITE_API_URL}/uploads/${img}`
                         }
                         alt=""
                         className="rounded-lg h-36 w-full object-cover border"
@@ -474,7 +649,7 @@ function Edit() {
                 <button
                   type="button"
                   onClick={addDescription}
-                  className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-4 h-11 rounded-xl"
+                  className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-4 h-11 rounded-xl cursor-pointer"
                 >
                   <Plus size={18} />
                   Tambah
@@ -508,7 +683,7 @@ function Edit() {
             <div className="flex justify-end pt-4">
               <button
                 type="submit"
-                className="bg-blue-800 hover:bg-blue-900 text-white px-8 h-12 rounded-xl flex items-center gap-3 font-semibold shadow-lg"
+                className="bg-blue-800 hover:bg-blue-900 text-white px-8 h-12 rounded-xl flex items-center gap-3 font-semibold shadow-lg cursor-pointer"
               >
                 <Save size={18} />
                 Simpan Properti

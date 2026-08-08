@@ -53,6 +53,7 @@ function Promotion() {
   const [exclusive, setExclusive] = useState(0);
 
   const [showNotif, setShowNotif] = useState(false);
+  const [showNotifImage, setShowNotifImage] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [missingFields, setMissingFields] = useState([]);
@@ -104,9 +105,13 @@ function Promotion() {
     const files = Array.from(e.target.files);
     const newImages = [...images, ...files].slice(0, 10);
     if (images.length + files.length > 10) {
-      alert("Maksimal 10 gambar.");
+      setShowNotifImage(true);
     }
     setImages(newImages);
+  };
+
+  const removeImage = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const addDescription = () => {
@@ -147,7 +152,7 @@ function Promotion() {
 
       form.append("deskripsi", JSON.stringify(deskripsi));
 
-      const response = await fetch("http://192.168.101.37:5000/promotion", {
+      const response = await fetch( `${import.meta.env.VITE_API_URL}/promotion`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -215,7 +220,7 @@ function Promotion() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    fetch("http://192.168.101.37:5000/exclusive", {
+    fetch( `${import.meta.env.VITE_API_URL}/exclusive`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -267,7 +272,7 @@ function Promotion() {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(
-        "http://192.168.101.37:5000/payment/generate-qris",
+        `${import.meta.env.VITE_API_URL}/payment/generate-qris`,
         {
           method: "POST",
           headers: {
@@ -329,7 +334,7 @@ function Promotion() {
     intervalRef.current = setInterval(async () => {
       try {
         const res = await fetch(
-          `http://192.168.101.37:5000/payment/query/${partner_ref_no}`,
+           `${import.meta.env.VITE_API_URL}/payment/query/${partner_ref_no}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -538,11 +543,11 @@ function Promotion() {
                   name="priceType"
                   value={formData.priceType}
                   onChange={handleChange}
-                  className="w-full h-12 rounded-lg border border-gray-300 px-4"
+                  className="w-full h-12 rounded-lg border border-gray-300 px-4 cursor-pointer"
                 >
                   <option value="global">Harga Global</option>
 
-                  <option value="per_meter">Harga per m²</option>
+                  <option value="perMeter">Harga per m²</option>
                 </select>
               </div>
               <div className="mt-6">
@@ -585,7 +590,7 @@ function Promotion() {
                     name="building"
                     value={formData.building}
                     onChange={handleChange}
-                    className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
+                    className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none cursor-pointer"
                   >
                     <option value="Rumah">Rumah</option>
                     <option value="Ruko">Ruko</option>
@@ -598,7 +603,7 @@ function Promotion() {
                     name="type"
                     value={formData.type}
                     onChange={handleChange}
-                    className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none"
+                    className="w-full h-12 rounded-lg border border-gray-300 px-4 focus:ring-2 focus:ring-blue-700 outline-none cursor-pointer"
                   >
                     <option value="Dijual">Dijual</option>
                     <option value="Disewa">Disewa</option>
@@ -848,12 +853,28 @@ function Promotion() {
                 <div className="md:col-span-8">
                   <div className="grid grid-cols-4 gap-4">
                     {images.map((img, index) => (
-                      <img
+                      <div
                         key={index}
-                        src={URL.createObjectURL(img)}
-                        alt=""
-                        className="rounded-lg h-36 w-full object-cover border"
-                      />
+                        className="relative h-36 rounded-lg overflow-hidden border group"
+                      >
+                        <img
+                          src={URL.createObjectURL(img)}
+                          alt={`Foto ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 w-9 h-9 flex items-center justify-center rounded-full bg-red-500 text-white shadow-md bg-red-600 cursor-pointer"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+
+                        {/* Nomor foto */}
+                        <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md">
+                          {index + 1}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -866,7 +887,7 @@ function Promotion() {
                 <button
                   type="button"
                   onClick={addDescription}
-                  className="flex items-center gap-2 bg-blue-800 hover:bg-blue-900 text-white px-4 h-11 rounded-xl"
+                  className="flex items-center gap-2 bg-blue-800 hover:bg-blue-900 text-white px-4 h-11 rounded-xl cursor-pointer"
                 >
                   <Plus size={18} />
                   Tambah
@@ -946,7 +967,8 @@ function Promotion() {
                   }}
                   className={`px-6 py-2 rounded-lg text-white font-semibold transition-all duration-300
                   ${
-                    (exclusive === 1 && saving) || (exclusive !== 1 && loadingQris)
+                    (exclusive === 1 && saving) ||
+                    (exclusive !== 1 && loadingQris)
                       ? "bg-gray-400 cursor-not-allowed"
                       : exclusive === 1
                         ? "bg-blue-700 hover:bg-blue-800 cursor-pointer"
@@ -1042,6 +1064,26 @@ function Promotion() {
                   OK
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+        {showNotifImage && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-5">
+            <div className="bg-white rounded-2xl p-8 w-96 shadow-2xl text-center">
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+                <Bookmark className="text-blue-800" size={34} />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mt-5">
+                Maksimal Foto yang disimpan adalah 10 Foto
+              </h2>
+              <button
+                onClick={() => {
+                  setShowNotifImage(false);
+                }}
+                className="mt-6 w-full h-11 rounded-xl bg-blue-800 hover:bg-blue-700 text-white font-semibold cursor-pointer"
+              >
+                OK
+              </button>
             </div>
           </div>
         )}

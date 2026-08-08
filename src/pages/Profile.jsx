@@ -37,7 +37,7 @@ function Profile() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    fetch("http://192.168.101.37:5000/profile", {
+    fetch(`${import.meta.env.VITE_API_URL}/profile`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -55,7 +55,7 @@ function Profile() {
 
   const handleSave = async () => {
     const token = localStorage.getItem("token");
-    const res = await fetch("http://192.168.101.37:5000/profile", {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/profile`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -77,7 +77,7 @@ function Profile() {
   const checkOldPassword = async () => {
     const token = localStorage.getItem("token");
     const res = await fetch(
-      "http://192.168.101.37:5000/profile/check-password",
+      `${import.meta.env.VITE_API_URL}/profile/check-password`,
       {
         method: "POST",
         headers: {
@@ -108,7 +108,7 @@ function Profile() {
 
     const token = localStorage.getItem("token");
     const res = await fetch(
-      "http://192.168.101.37:5000/profile/change-password",
+      `${import.meta.env.VITE_API_URL}/profile/change-password`,
       {
         method: "PUT",
         headers: {

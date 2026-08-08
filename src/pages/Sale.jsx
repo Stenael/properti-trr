@@ -40,7 +40,7 @@ function Sale() {
   };
 
   useEffect(() => {
-    fetch("http://192.168.101.37:5000/properties/sale")
+    fetch(`${import.meta.env.VITE_API_URL}/properties/sale`)
       .then((res) => res.json())
       .then((data) => setProperties(data))
       .catch(console.error);
@@ -161,7 +161,7 @@ function Sale() {
             >
               <div className="relative">
                 <img
-                  src={`http://192.168.101.37:5000/uploads/${
+                  src={`${import.meta.env.VITE_API_URL}/uploads/${
                     property.images[currentImage[property.id] || 0]
                   }`}
                   alt={property.name}

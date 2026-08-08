@@ -25,7 +25,7 @@ dotenv.config();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const authenticateToken = require("./auth");
-const sharp = require("sharp");
+// const sharp = require("sharp");
 
 app.use("/uploads", express.static("uploads"));
 const multer = require("multer");
